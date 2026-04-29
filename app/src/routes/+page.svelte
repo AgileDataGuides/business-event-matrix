@@ -195,7 +195,7 @@
 		<div class="px-6 py-3 border-b border-slate-200 bg-white shrink-0">
 			<Toolbar bind:activeTab />
 		</div>
-		<div class="flex-1 overflow-hidden">
+		<div class="flex-1 overflow-hidden flex flex-col">
 			<BusinessEventMatrixLayout
 				{nodes}
 				{links}
