@@ -1,6 +1,6 @@
 # Business Event Matrix
 
-Model your Business Domains, Core Business Events, and the Cor Business Concepts that describe them. The Business Event Matrix provides a visual grid showing which Concepts are involved in each Event and which Domain own them.
+Model your Business Domains, Core Business Events, and the Core Business Concepts that describe them. The Business Event Matrix provides a visual grid showing which Concepts are involved in each Event and which Domain own them.
 
 An [AgileDataGuides](https://agiledataguides.com/agiledata-templates/) Pattern Template app.
 
@@ -22,7 +22,7 @@ The Business Event Matrix maps the relationship between business events and the 
 
 **[Launch the Live Demo](https://agiledataguides.github.io/business-event-matrix)** — no install required. The demo runs entirely in your browser. Your data is saved in localStorage and never leaves your device.
 
-The demo includes the *SaaS Revenue Metrics* example canvas so you can explore the app straight away.
+The demo includes three example matrix so you can explore the app straight away.
 
 ## Install and Run
 
