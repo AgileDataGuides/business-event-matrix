@@ -1,6 +1,37 @@
 import type { DomainModel, BusinessEvent, Concept, Domain, W, EventDimensionMark } from '$lib/types';
 import { bemModelToCsv, bemModelToXlsxBlob, downloadBemBlob, bemExportFilename } from '$lib/export-bem';
 
+// Demo mode (GitHub Pages static build via VITE_DEMO_MODE=true). All persistence
+// flips to localStorage and the matrix list is seeded with the three example
+// JSONs that ship with the standalone repo. Normal dev / standalone install
+// keeps using the SvelteKit API routes against ../data/.
+const DEMO_MODE =
+	typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEMO_MODE === 'true';
+const LS_KEY = 'bdm-demo-models';
+
+function lsGetAll(): Record<string, DomainModel> {
+	try {
+		const raw = localStorage.getItem(LS_KEY);
+		return raw ? JSON.parse(raw) : {};
+	} catch {
+		return {};
+	}
+}
+
+function lsSaveAll(models: Record<string, DomainModel>): void {
+	localStorage.setItem(LS_KEY, JSON.stringify(models));
+}
+
+// Seed JSONs imported at build time so the demo starts populated.
+import iceCreamShop from '$data/ice-cream-shop.json';
+import lawrenceCorr from '$data/lawrence-corr-beam-bem.json';
+import saasRevenue from '$data/saas-revenue-events-matrix-2.json';
+const DEMO_SEED_MODELS: DomainModel[] = [
+	iceCreamShop as unknown as DomainModel,
+	lawrenceCorr as unknown as DomainModel,
+	saasRevenue as unknown as DomainModel
+];
+
 function stripDateTimeSuffix(name: string): string {
 	return name.replace(/-\d{4}-\d{2}-\d{2}-\d{6}$/, '');
 }
@@ -108,11 +139,18 @@ export function createBemStore(options: BemStoreOptions = {}) {
 	// --- API helpers (defaults to SvelteKit API routes) ---
 
 	const apiListModels = options.listModels ?? (async (): Promise<DomainModel[]> => {
+		if (DEMO_MODE) return Object.values(lsGetAll());
 		const res = await fetch('/api/models');
 		return res.json();
 	});
 
 	const apiSaveModel = options.saveModel ?? (async (m: DomainModel): Promise<void> => {
+		if (DEMO_MODE) {
+			const all = lsGetAll();
+			all[m.id] = m;
+			lsSaveAll(all);
+			return;
+		}
 		await fetch(`/api/models/${m.id}`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
@@ -121,6 +159,12 @@ export function createBemStore(options: BemStoreOptions = {}) {
 	});
 
 	const apiCreateModel = options.createModel ?? (async (m: DomainModel): Promise<void> => {
+		if (DEMO_MODE) {
+			const all = lsGetAll();
+			all[m.id] = m;
+			lsSaveAll(all);
+			return;
+		}
 		await fetch('/api/models', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -129,10 +173,21 @@ export function createBemStore(options: BemStoreOptions = {}) {
 	});
 
 	const apiDeleteModel = options.deleteModel ?? (async (id: string): Promise<void> => {
+		if (DEMO_MODE) {
+			const all = lsGetAll();
+			delete all[id];
+			lsSaveAll(all);
+			return;
+		}
 		await fetch(`/api/models/${id}`, { method: 'DELETE' });
 	});
 
 	const apiLoadModel = options.loadModel ?? (async (id: string): Promise<DomainModel> => {
+		if (DEMO_MODE) {
+			const found = lsGetAll()[id];
+			if (!found) throw new Error(`Model not found: ${id}`);
+			return found;
+		}
 		const res = await fetch(`/api/models/${id}`);
 		return res.json();
 	});
@@ -162,10 +217,23 @@ export function createBemStore(options: BemStoreOptions = {}) {
 		if (loaded) return;
 		const models = await apiListModels();
 		if (models.length === 0) {
-			const example = makeExampleModel();
-			await apiCreateModel(example);
-			savedList = [{ id: example.id, name: example.name }];
-			model = example;
+			// In demo mode, seed all three example matrices that ship with the
+			// standalone repo so visitors see a populated app instead of a
+			// single ice-cream-shop seed.
+			if (DEMO_MODE) {
+				for (const m of DEMO_SEED_MODELS) {
+					const migrated = migrateModel(JSON.parse(JSON.stringify(m)));
+					await apiCreateModel(migrated);
+				}
+				const all = (await apiListModels()).map(migrateModel);
+				savedList = all.map((m) => ({ id: m.id, name: m.name }));
+				model = all[0];
+			} else {
+				const example = makeExampleModel();
+				await apiCreateModel(example);
+				savedList = [{ id: example.id, name: example.name }];
+				model = example;
+			}
 		} else {
 			const migrated = models.map(migrateModel);
 			savedList = migrated.map((m) => ({ id: m.id, name: m.name }));
