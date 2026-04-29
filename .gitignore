@@ -1,0 +1,11 @@
+node_modules/
+.svelte-kit/
+build/
+data/*.json
+!data/ice-cream-shop.json
+!data/lawrence-corr-beam-bem.json
+!data/saas-revenue-events-matrix-2.json
+.DS_Store
+.env
+.env.*
+*.log

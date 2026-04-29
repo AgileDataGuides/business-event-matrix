@@ -1,0 +1,432 @@
+{
+  "version": "1.0",
+  "id": "saas-revenue-events-matrix-2",
+  "name": "SaaS Revenue Events Matrix",
+  "description": "Business Event Matrix covering the full SaaS customer funnel — ad-click to renewal / cancellation.",
+  "domains": [
+    {
+      "id": "customer-success",
+      "name": "Customer Success",
+      "description": "",
+      "aliases": [],
+      "owner": "",
+      "order": 0
+    },
+    {
+      "id": "finance",
+      "name": "Finance",
+      "description": "",
+      "aliases": [],
+      "owner": "CFO",
+      "order": 1,
+      "notes": ""
+    },
+    {
+      "id": "d-marketing",
+      "name": "Marketing & Acquisition",
+      "description": "Paid and organic acquisition of prospects.",
+      "aliases": [],
+      "owner": "CRO",
+      "order": 2
+    },
+    {
+      "id": "d-revenue",
+      "name": "Revenue & Growth",
+      "description": "Invoicing, payments, discounts and recognised revenue.",
+      "aliases": [],
+      "owner": "CRO",
+      "order": 3,
+      "notes": ""
+    }
+  ],
+  "events": [
+    {
+      "id": "e-1",
+      "name": "Prospect Clicks on Ad",
+      "description": "A prospect clicks on one of our paid ads, landing on the website.",
+      "order": 1,
+      "importance": 3,
+      "estimate": 1,
+      "domains": {
+        "Marketing & Acquisition": "star",
+        "d-marketing": "star"
+      },
+      "concepts": {
+        "Prospect": "star",
+        "Ad Campaign": "check",
+        "Channel": "check",
+        "dim-campaign": "check",
+        "dim-prospect": "check",
+        "dim-channel": "check",
+        "click-event": "star"
+      }
+    },
+    {
+      "id": "e-2",
+      "name": "Prospect Signs-up for Trial",
+      "description": "A prospect creates a trial account to evaluate the product.",
+      "order": 2,
+      "importance": 3,
+      "estimate": 1,
+      "domains": {
+        "Marketing & Acquisition": "star",
+        "Customer Lifecycle": "check",
+        "d-marketing": "star"
+      },
+      "concepts": {
+        "Prospect": "star",
+        "Trial Account": "check",
+        "Channel": "check",
+        "Self-serve": "check",
+        "dim-trial": "check",
+        "dim-prospect": "check",
+        "sign-up": "star"
+      }
+    },
+    {
+      "id": "e-3",
+      "name": "Customer Activates Account",
+      "description": "A trial user completes onboarding and activates the account for use.",
+      "order": 3,
+      "importance": 3,
+      "estimate": 1,
+      "domains": {
+        "Customer Lifecycle": "star",
+        "d-revenue": "check",
+        "d-marketing": "check"
+      },
+      "concepts": {
+        "Customer": "star",
+        "Trial Account": "check",
+        "Activation Date": "check",
+        "dim-activation-date": "check",
+        "dim-customer": "check",
+        "account": "star"
+      }
+    },
+    {
+      "id": "e-4",
+      "name": "Customer Subscribes to a Paid Plan",
+      "description": "An activated customer converts to a paid subscription on a plan.",
+      "order": 4,
+      "importance": 3,
+      "estimate": 1,
+      "domains": {
+        "Subscription Management": "star",
+        "Revenue & Billing": "check",
+        "Customer Lifecycle": "check",
+        "d-revenue": "star"
+      },
+      "concepts": {
+        "Customer": "star",
+        "Subscription": "check",
+        "Plan": "check",
+        "Discount": "check",
+        "Customer Segment": "check",
+        "Acquisition Cohort": "check",
+        "MRR Amount": "check",
+        "ARR Amount": "check",
+        "Self-serve": "check",
+        "Sales-assisted": "check",
+        "dim-mrr": "check",
+        "dim-arr": "check",
+        "dim-arpu": "check",
+        "subscription-date": "check",
+        "dim-invoice": "check",
+        "dim-payment": "check",
+        "dim-plan": "check",
+        "dim-subscription": "star",
+        "dim-customer": "check"
+      }
+    },
+    {
+      "id": "e-5",
+      "name": "Customer Upgrades or Downgrades their Subscription",
+      "description": "An existing customer changes their plan tier (up or down).",
+      "order": 5,
+      "importance": 3,
+      "estimate": 1,
+      "domains": {
+        "Subscription Management": "star",
+        "Revenue & Billing": "check",
+        "d-revenue": "star"
+      },
+      "concepts": {
+        "Customer": "star",
+        "Subscription": "check",
+        "Plan": "check",
+        "MRR Amount": "check",
+        "ARR Amount": "check",
+        "dim-mrr": "check",
+        "dim-arr": "check",
+        "dim-arpu": "check",
+        "subscription-date": "check",
+        "dim-invoice": "check",
+        "dim-payment": "check",
+        "dim-plan": "check",
+        "dim-subscription": "check",
+        "dim-customer": "check"
+      }
+    },
+    {
+      "id": "e-6",
+      "name": "Customer Renews their Subscription",
+      "description": "An existing customer renews at the end of a billing cycle.",
+      "order": 6,
+      "importance": 3,
+      "estimate": 1,
+      "domains": {
+        "Subscription Management": "star",
+        "Revenue & Billing": "check",
+        "customer-success": "star",
+        "d-revenue": "check"
+      },
+      "concepts": {
+        "Customer": "star",
+        "Subscription": "check",
+        "Renewal Date": "check",
+        "Invoice": "check",
+        "Payment": "check",
+        "MRR Amount": "check",
+        "ARR Amount": "check",
+        "dim-mrr": "check",
+        "dim-arr": "check",
+        "dim-arpu": "check",
+        "dim-renewal-date": "check",
+        "dim-subscription": "check",
+        "dim-customer": "check",
+        "renewal": "star"
+      }
+    },
+    {
+      "id": "e-7",
+      "name": "Customer Cancels their Subscription",
+      "description": "An existing customer terminates their subscription.",
+      "order": 7,
+      "importance": 3,
+      "estimate": 1,
+      "domains": {
+        "Customer Lifecycle": "star",
+        "Subscription Management": "check",
+        "customer-success": "star"
+      },
+      "concepts": {
+        "Customer": "star",
+        "Subscription": "check",
+        "Cancellation Date": "check",
+        "MRR Amount": "check",
+        "ARR Amount": "check",
+        "dim-mrr": "check",
+        "dim-arr": "check",
+        "dim-arpu": "check",
+        "dim-cancellation-date": "check",
+        "dim-subscription": "check",
+        "dim-customer": "check",
+        "cancellation": "star"
+      }
+    }
+  ],
+  "concepts": [
+    {
+      "id": "dim-prospect",
+      "name": "Prospect",
+      "description": "",
+      "aliases": [],
+      "w": "who",
+      "order": 1
+    },
+    {
+      "id": "dim-customer",
+      "name": "Customer",
+      "description": "",
+      "aliases": [],
+      "w": "who",
+      "order": 2
+    },
+    {
+      "id": "dim-subscription",
+      "name": "Subscription",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 1
+    },
+    {
+      "id": "dim-plan",
+      "name": "Plan",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 2
+    },
+    {
+      "id": "dim-campaign",
+      "name": "Ad Campaign",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 3
+    },
+    {
+      "id": "dim-trial",
+      "name": "Trial Account",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 4
+    },
+    {
+      "id": "dim-payment",
+      "name": "Payment",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 5
+    },
+    {
+      "id": "dim-invoice",
+      "name": "Invoice",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 6
+    },
+    {
+      "id": "dim-channel",
+      "name": "Marketing Channel",
+      "description": "",
+      "aliases": [],
+      "w": "where",
+      "order": 1,
+      "notes": "",
+      "definitionCategory": "",
+      "definitionDifferentiator": ""
+    },
+    {
+      "id": "dim-activation-date",
+      "name": "Activation Date",
+      "description": "",
+      "aliases": [],
+      "w": "when",
+      "order": 1
+    },
+    {
+      "id": "dim-renewal-date",
+      "name": "Renewal Date",
+      "description": "",
+      "aliases": [],
+      "w": "when",
+      "order": 2
+    },
+    {
+      "id": "dim-cancellation-date",
+      "name": "Cancellation Date",
+      "description": "",
+      "aliases": [],
+      "w": "when",
+      "order": 3
+    },
+    {
+      "id": "dim-discount",
+      "name": "Discount",
+      "description": "",
+      "aliases": [],
+      "w": "why",
+      "order": 1
+    },
+    {
+      "id": "dim-selfserve",
+      "name": "Self Serve",
+      "description": "",
+      "aliases": [],
+      "w": "how",
+      "order": 1,
+      "notes": "",
+      "definitionCategory": "",
+      "definitionDifferentiator": ""
+    },
+    {
+      "id": "dim-sales",
+      "name": "Outbound Sales",
+      "description": "",
+      "aliases": [],
+      "w": "how",
+      "order": 2,
+      "notes": "",
+      "definitionCategory": "",
+      "definitionDifferentiator": ""
+    },
+    {
+      "id": "dim-mrr",
+      "name": "MRR Amount",
+      "description": "",
+      "aliases": [],
+      "w": "how many",
+      "order": 1
+    },
+    {
+      "id": "dim-arr",
+      "name": "ARR Amount",
+      "description": "",
+      "aliases": [],
+      "w": "how many",
+      "order": 2
+    },
+    {
+      "id": "dim-arpu",
+      "name": "ARPU Amount",
+      "description": "",
+      "aliases": [],
+      "w": "how many",
+      "order": 3
+    },
+    {
+      "id": "subscription-date",
+      "name": "Subscription Date",
+      "description": "",
+      "aliases": [],
+      "w": "when",
+      "order": 7
+    },
+    {
+      "id": "renewal",
+      "name": "Renewal",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 8
+    },
+    {
+      "id": "cancellation",
+      "name": "Cancellation",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 9
+    },
+    {
+      "id": "account",
+      "name": "Account",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 10
+    },
+    {
+      "id": "click-event",
+      "name": "Click Event",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 11
+    },
+    {
+      "id": "sign-up",
+      "name": "Sign-Up",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 12
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+/* Scan shared components for Tailwind utility classes (Tailwind 4 auto-detection
+   doesn't cross workspace boundaries). */
+@source '../../../../packages/shared/src';
+
+:root {
+	--color-who: #16a34a;
+	--color-what: #2563eb;
+	--color-when: #d97706;
+	--color-where: #0891b2;
+	--color-why: #a855f7;
+	--color-how: #6b7280;
+	--color-howmany: #f97316;
+}
+
+html, body {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	background-color: #f8fafc;
+	color: #1e293b;
+}

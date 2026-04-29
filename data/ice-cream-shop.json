@@ -1,0 +1,211 @@
+{
+  "version": "1.0",
+  "id": "ice-cream-shop",
+  "name": "Ice Cream Shop",
+  "description": "Simple dummy example of the Business Event Matrix",
+  "domains": [
+    {
+      "id": "f2c207a9-c529-4043-96d5-f5e883e42756",
+      "name": "Finance",
+      "description": "",
+      "aliases": [],
+      "owner": "",
+      "order": 1,
+      "notes": ""
+    },
+    {
+      "id": "8483ade3-e36b-495a-a2ef-ae08206df990",
+      "name": "Sales",
+      "description": "Sales",
+      "aliases": [
+        "Revenue",
+        "Commerce",
+        "POS"
+      ],
+      "owner": "Store Manager",
+      "order": 2,
+      "notes": ""
+    },
+    {
+      "id": "8f8762ca-e22c-440f-a6b8-0dc7c77065e5",
+      "name": "Operations",
+      "description": "Day-to-day across store operations, staffing, and inventory management",
+      "aliases": [
+        "Ops",
+        "Store Management"
+      ],
+      "owner": "Operations Manager",
+      "order": 3,
+      "notes": ""
+    }
+  ],
+  "events": [
+    {
+      "id": "f88ae771-4832-4a2d-84bf-ea334890d64c",
+      "name": "Customer Orders Ice Creams",
+      "description": "",
+      "order": 1,
+      "importance": 0,
+      "estimate": 0,
+      "domains": {
+        "8483ade3-e36b-495a-a2ef-ae08206df990": "star"
+      },
+      "concepts": {
+        "c0971c36-e970-4178-8d4a-de74960f05a4": "check",
+        "employee": "check",
+        "ice-cream": "check",
+        "store": "check",
+        "order": "star",
+        "order-value": "check"
+      }
+    },
+    {
+      "id": "b33b5cf8-da21-4a37-b884-10e819811749",
+      "name": "Customer Pays for Order",
+      "description": "",
+      "order": 2,
+      "importance": 0,
+      "estimate": 0,
+      "domains": {
+        "f2c207a9-c529-4043-96d5-f5e883e42756": "star"
+      },
+      "concepts": {
+        "c0971c36-e970-4178-8d4a-de74960f05a4": "check",
+        "employee": "check",
+        "payment": "star",
+        "order": "check"
+      }
+    },
+    {
+      "id": "customer-receives-product",
+      "name": "Customer Receives Ice Creams",
+      "description": "",
+      "order": 3,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "c0971c36-e970-4178-8d4a-de74960f05a4": "check",
+        "employee": "check",
+        "ice-cream": "check"
+      },
+      "domains": {
+        "8483ade3-e36b-495a-a2ef-ae08206df990": "star"
+      }
+    },
+    {
+      "id": "employee-refunds-payment",
+      "name": "Employee Refunds Payment",
+      "description": "",
+      "order": 4,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "c0971c36-e970-4178-8d4a-de74960f05a4": "check",
+        "employee": "check",
+        "refund": "star",
+        "payment": "check",
+        "store": "check",
+        "refund-value": "check"
+      },
+      "domains": {
+        "8f8762ca-e22c-440f-a6b8-0dc7c77065e5": "star"
+      }
+    }
+  ],
+  "concepts": [
+    {
+      "id": "c0971c36-e970-4178-8d4a-de74960f05a4",
+      "name": "Customer",
+      "description": "An individual or organisation that purchases products",
+      "aliases": [
+        "Client",
+        "Subscriber",
+        "Account Holder"
+      ],
+      "w": "who",
+      "order": 1
+    },
+    {
+      "id": "employee",
+      "name": "Employee",
+      "description": "",
+      "aliases": [],
+      "w": "who",
+      "order": 2
+    },
+    {
+      "id": "ice-cream",
+      "name": "Ice Cream",
+      "description": "",
+      "aliases": [
+        "Product"
+      ],
+      "w": "what",
+      "order": 3,
+      "notes": "",
+      "definitionCategory": "",
+      "definitionDifferentiator": ""
+    },
+    {
+      "id": "store",
+      "name": "Store",
+      "description": "",
+      "aliases": [],
+      "w": "where",
+      "order": 4
+    },
+    {
+      "id": "order",
+      "name": "Order",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 5
+    },
+    {
+      "id": "order-value",
+      "name": "Order Value",
+      "description": "",
+      "aliases": [],
+      "w": "how many",
+      "order": 6
+    },
+    {
+      "id": "payment",
+      "name": "Payment",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 7
+    },
+    {
+      "id": "delivery",
+      "name": "Delivery",
+      "description": "",
+      "aliases": [
+        "Receipt"
+      ],
+      "w": "what",
+      "order": 8,
+      "notes": "We provide an automatic receipt at time of payment, not time we hand over the Ice Cream, so we have no data to tell if the Ice Cream is ever receives or not.\n\nWill use logic that says if there was no refund for that order it must have been received.",
+      "definitionCategory": "",
+      "definitionDifferentiator": ""
+    },
+    {
+      "id": "refund",
+      "name": "Refund",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 9
+    },
+    {
+      "id": "refund-value",
+      "name": "Refund Value",
+      "description": "",
+      "aliases": [],
+      "w": "how many",
+      "order": 10
+    }
+  ]
+}

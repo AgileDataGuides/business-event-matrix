@@ -1,0 +1,348 @@
+{
+  "version": "1.0",
+  "id": "lawrence-corr-beam-bem",
+  "name": "Lawrence Corr BEAM",
+  "description": "Example business domain model based on Lawrence Corrs BEAM exercises",
+  "domains": [
+    {
+      "id": "finance",
+      "name": "Finance",
+      "description": "",
+      "aliases": [],
+      "owner": "",
+      "order": 0
+    },
+    {
+      "id": "manufacturing",
+      "name": "Manufacturing",
+      "description": "",
+      "aliases": [],
+      "owner": "",
+      "order": 1
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing",
+      "description": "",
+      "aliases": [],
+      "owner": "",
+      "order": 2
+    },
+    {
+      "id": "product-development",
+      "name": "Product Development",
+      "description": "",
+      "aliases": [],
+      "owner": "",
+      "order": 3
+    },
+    {
+      "id": "sales",
+      "name": "Sales",
+      "description": "",
+      "aliases": [],
+      "owner": "",
+      "order": 4
+    }
+  ],
+  "concepts": [
+    {
+      "id": "employee",
+      "name": "Employee",
+      "description": "",
+      "aliases": [],
+      "w": "who",
+      "order": 1,
+      "notes": "",
+      "definitionCategory": "Person",
+      "definitionDifferentiator": "has a signed Employment Agreement"
+    },
+    {
+      "id": "supplier",
+      "name": "Supplier",
+      "description": "",
+      "aliases": [],
+      "w": "who",
+      "order": 2
+    },
+    {
+      "id": "reseller",
+      "name": "Reseller",
+      "description": "",
+      "aliases": [],
+      "w": "who",
+      "order": 3
+    },
+    {
+      "id": "carrier",
+      "name": "Carrier",
+      "description": "",
+      "aliases": [],
+      "w": "who",
+      "order": 4
+    },
+    {
+      "id": "component",
+      "name": "Component",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 5
+    },
+    {
+      "id": "product",
+      "name": "Product",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 6
+    },
+    {
+      "id": "process",
+      "name": "Process",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 7
+    },
+    {
+      "id": "test",
+      "name": "Test",
+      "description": "",
+      "aliases": [],
+      "w": "what",
+      "order": 8
+    },
+    {
+      "id": "plant",
+      "name": "Plant",
+      "description": "",
+      "aliases": [],
+      "w": "where",
+      "order": 9,
+      "notes": "",
+      "definitionCategory": "",
+      "definitionDifferentiator": ""
+    },
+    {
+      "id": "warehouse",
+      "name": "Warehouse",
+      "description": "",
+      "aliases": [],
+      "w": "where",
+      "order": 10
+    },
+    {
+      "id": "store",
+      "name": "Store",
+      "description": "",
+      "aliases": [],
+      "w": "where",
+      "order": 11
+    },
+    {
+      "id": "contract",
+      "name": "Contract",
+      "description": "",
+      "aliases": [],
+      "w": "how",
+      "order": 12
+    },
+    {
+      "id": "shipment",
+      "name": "Shipment",
+      "description": "",
+      "aliases": [],
+      "w": "how",
+      "order": 13
+    },
+    {
+      "id": "purchase-order",
+      "name": "Purchase Order",
+      "description": "",
+      "aliases": [],
+      "w": "how",
+      "order": 14
+    }
+  ],
+  "events": [
+    {
+      "id": "plant-builds-product",
+      "name": "Plant Builds Product",
+      "description": "",
+      "order": 1,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "test": "check",
+        "warehouse": "check"
+      },
+      "domains": {
+        "manufacturing": "star",
+        "marketing": "check",
+        "finance": "check",
+        "product-development": "check"
+      }
+    },
+    {
+      "id": "product-made-from-components",
+      "name": "Product made from Components",
+      "description": "",
+      "order": 2,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "process": "check",
+        "test": "check"
+      },
+      "domains": {
+        "manufacturing": "star",
+        "finance": "check",
+        "product-development": "check"
+      }
+    },
+    {
+      "id": "employee-purchases-component",
+      "name": "Employee purchases Component",
+      "description": "",
+      "order": 3,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "employee": "check",
+        "supplier": "check",
+        "purchase-order": "star",
+        "component": "check",
+        "contract": "check",
+        "process": "check",
+        "warehouse": "check"
+      },
+      "domains": {
+        "manufacturing": "check"
+      }
+    },
+    {
+      "id": "supplier-delivered-component",
+      "name": "Supplier delivered Component",
+      "description": "",
+      "order": 4,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "carrier": "check",
+        "supplier": "check",
+        "process": "check",
+        "warehouse": "check",
+        "purchase-order": "check",
+        "shipment": "star"
+      },
+      "domains": {
+        "manufacturing": "star"
+      }
+    },
+    {
+      "id": "employee-pays-supplier",
+      "name": "Employee pays Supplier",
+      "description": "",
+      "order": 5,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "employee": "check",
+        "supplier": "check",
+        "process": "check",
+        "purchase-order": "check"
+      },
+      "domains": {}
+    },
+    {
+      "id": "plant-stocks-component",
+      "name": "Plant stocks Component",
+      "description": "",
+      "order": 6,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "process": "check",
+        "warehouse": "check"
+      },
+      "domains": {
+        "manufacturing": "star"
+      }
+    },
+    {
+      "id": "employee-tests-product",
+      "name": "Employee tests Product",
+      "description": "",
+      "order": 7,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "employee": "check",
+        "supplier": "check",
+        "process": "check",
+        "test": "check",
+        "plant": "star",
+        "warehouse": "check"
+      },
+      "domains": {
+        "manufacturing": "star",
+        "finance": "check",
+        "product-development": "check"
+      }
+    },
+    {
+      "id": "plant-runs-process",
+      "name": "Plant runs Process",
+      "description": "",
+      "order": 8,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "employee": "check",
+        "process": "check",
+        "product": "star",
+        "test": "check",
+        "warehouse": "check"
+      },
+      "domains": {
+        "manufacturing": "star",
+        "finance": "check",
+        "product-development": "check"
+      }
+    },
+    {
+      "id": "warehouse-stocks-products",
+      "name": "Warehouse stocks Products",
+      "description": "",
+      "order": 9,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "test": "check"
+      },
+      "domains": {
+        "marketing": "check",
+        "sales": "check"
+      }
+    },
+    {
+      "id": "carrier-ships-product",
+      "name": "Carrier ships Product",
+      "description": "",
+      "order": 10,
+      "importance": 0,
+      "estimate": 0,
+      "concepts": {
+        "carrier": "check",
+        "reseller": "check",
+        "shipment": "star",
+        "contract": "check",
+        "test": "check"
+      },
+      "domains": {
+        "sales": "check"
+      }
+    }
+  ]
+}
