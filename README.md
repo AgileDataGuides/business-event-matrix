@@ -4,6 +4,9 @@ Model your Business Domains, Core Business Events, and the Cor Business Concepts
 
 An [AgileDataGuides](https://agiledataguides.com/agiledata-templates/) Pattern Template app.
 
+
+![Business Event Matrix](app/static/screenshot-2026-04-29.png)
+
 ## What It Does
 
 The Business Event Matrix maps the relationship between business events and the concepts they involve, as well as identifying which domain owns them:
@@ -14,6 +17,12 @@ The Business Event Matrix maps the relationship between business events and the 
 | **Events** | Core Business Events — things that happen in the business (e.g. Customer Places Order) |
 | **Concepts** | Core Business Concepts within each domain (e.g. Customer, Product, Order) |
 | **Marks** | Check (✓) to indicate a Concept is involved in an Event, or star (★) to indicate that the Event drives the creation of that Concept's values — e.g. starring Order on the Customer Places Order event means that event is what creates new order IDs |
+
+## Try It Online
+
+**[Launch the Live Demo](https://agiledataguides.github.io/business-event-matrix)** — no install required. The demo runs entirely in your browser. Your data is saved in localStorage and never leaves your device.
+
+The demo includes the *SaaS Revenue Metrics* example canvas so you can explore the app straight away.
 
 ## Install and Run
 

@@ -488,8 +488,8 @@ export function createBemStore(options: BemStoreOptions = {}) {
 		return bemModelToCsv(model);
 	}
 
-	function exportAsXlsx() {
-		const blob = bemModelToXlsxBlob(model);
+	async function exportAsXlsx() {
+		const blob = await bemModelToXlsxBlob(model);
 		downloadBemBlob(blob, bemExportFilename(model.name, 'xlsx'));
 	}
 

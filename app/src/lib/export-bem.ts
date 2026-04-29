@@ -13,7 +13,7 @@
  *   path (registered in this app's package.json `exports` map).
  */
 
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import type { DomainModel } from './types';
 
 /** Build the BEM matrix as a CSV string. Same column ordering as XLSX sheet 1. */
@@ -53,9 +53,11 @@ export function bemModelToCsv(model: DomainModel): string {
 /**
  * Build the BEM matrix as an XLSX `Blob`. Three sheets: Matrix, Domains, Concepts.
  * Caller is responsible for triggering the download (`downloadBemBlob`).
+ *
+ * Async because ExcelJS's `writeBuffer` returns a Promise.
  */
-export function bemModelToXlsxBlob(model: DomainModel): Blob {
-	const wb = XLSX.utils.book_new();
+export async function bemModelToXlsxBlob(model: DomainModel): Promise<Blob> {
+	const wb = new ExcelJS.Workbook();
 
 	const sortedDomains = [...(model.domains || [])].sort((a, b) =>
 		a.name.localeCompare(b.name)
@@ -84,9 +86,9 @@ export function bemModelToXlsxBlob(model: DomainModel): Blob {
 		}
 		return row;
 	});
-	const matrixSheet = XLSX.utils.aoa_to_sheet([headers, ...matrixData]);
 	const sheetTitle = (model.name || 'Matrix').slice(0, 31);
-	XLSX.utils.book_append_sheet(wb, matrixSheet, sheetTitle);
+	const matrixSheet = wb.addWorksheet(sheetTitle);
+	matrixSheet.addRows([headers, ...matrixData]);
 
 	// Sheet 2: Domains
 	if (sortedDomains.length > 0) {
@@ -97,8 +99,8 @@ export function bemModelToXlsxBlob(model: DomainModel): Blob {
 			d.owner || '',
 			(d.aliases || []).join(', ')
 		]);
-		const domSheet = XLSX.utils.aoa_to_sheet([domHeaders, ...domData]);
-		XLSX.utils.book_append_sheet(wb, domSheet, 'Domains');
+		const domSheet = wb.addWorksheet('Domains');
+		domSheet.addRows([domHeaders, ...domData]);
 	}
 
 	// Sheet 3: Concepts
@@ -109,11 +111,11 @@ export function bemModelToXlsxBlob(model: DomainModel): Blob {
 		c.description || '',
 		(c.aliases || []).join(', ')
 	]);
-	const conceptSheet = XLSX.utils.aoa_to_sheet([conceptHeaders, ...conceptData]);
-	XLSX.utils.book_append_sheet(wb, conceptSheet, 'Concepts');
+	const conceptSheet = wb.addWorksheet('Concepts');
+	conceptSheet.addRows([conceptHeaders, ...conceptData]);
 
-	const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-	return new Blob([data], {
+	const buffer = await wb.xlsx.writeBuffer();
+	return new Blob([buffer], {
 		type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 	});
 }
