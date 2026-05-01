@@ -3,7 +3,7 @@
 	import { createBemStore } from '$lib/stores/domain.svelte';
 	import { createStandaloneAdapter } from '$lib/adapters/standalone-adapter';
 	import { bemToContextPlane, contextPlaneToBem } from '$lib/converters/context-plane';
-	import type { DataAdapter, ContextNode, ContextLink } from '$lib/types/shared';
+	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
 	import Toolbar from '$lib/components/Toolbar.svelte';
 	import Instructions from '$lib/components/Instructions.svelte';
 	import BusinessEventMatrixLayout from '$lib/components/canvas/BusinessEventMatrixLayout.svelte';

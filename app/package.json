@@ -22,7 +22,7 @@
 		"svelte-check": "^4.4.2",
 		"tailwindcss": "^4.0.0",
 		"typescript": "^6.0.3",
-		"vite": "^7.3.2"
+		"vite": "^8.0.10"
 	},
 	"exports": {
 		"./canvas/BusinessEventMatrixLayout.svelte": "./src/lib/components/canvas/BusinessEventMatrixLayout.svelte",

@@ -1,4 +1,4 @@
-import type { DataAdapter, ContextNode, ContextLink } from '$lib/types/shared';
+import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
 import type { DomainModel, EventDimensionMark } from '$lib/types';
 
 function createId(): string {

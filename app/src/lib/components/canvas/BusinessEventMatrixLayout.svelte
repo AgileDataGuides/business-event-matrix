@@ -8,8 +8,9 @@
 	 * event_involves_concept links, following the mark-as-link-properties pattern.
 	 */
 	import { getContext } from 'svelte';
-	import type { DataAdapter, ContextNode, ContextLink } from '$lib/types/shared';
-	import { getNodeLabels } from '$lib/types/shared';
+	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
+	import { getNodeLabels } from '$lib/cp-shared';
+	import CardEditModal from '$lib/components/canvas/CardEditModal.svelte';
 
 	// W constants (duplicated from BEM app to avoid cross-app import)
 	type W = 'who' | 'what' | 'when' | 'where' | 'why' | 'how' | 'how many';
@@ -724,6 +725,29 @@
 	let editingEventName = $state('');
 	let editingDomainId = $state<string | null>(null);
 	let editingDimId = $state<string | null>(null);
+
+	// Event card edit modal — clicking an event's row name opens this modal
+	// to edit name + description or delete the event. Domains + concepts
+	// have their own existing column-header modal (with extra fields like
+	// W category and definition); this is the cards path.
+	let cardEditId = $state<string | null>(null);
+	const cardEditNode = $derived(
+		cardEditId ? eventNodes.find((n) => n.id === cardEditId) ?? null : null
+	);
+
+	function openCardEdit(id: string) {
+		cardEditId = id;
+	}
+
+	async function handleCardEditSave(updates: { name: string; description: string }) {
+		if (!cardEditId) return;
+		await adapter.updateNode(cardEditId, updates);
+	}
+
+	async function handleCardEditDelete() {
+		if (!cardEditId) return;
+		await adapter.deleteNode(cardEditId);
+	}
 
 	async function handleModelNameChange(newName: string) {
 		const trimmed = newName.trim();
@@ -1500,7 +1524,7 @@
 												class="text-xs font-semibold px-1 py-0.5 border border-blue-400 rounded outline-none w-full"
 											/>
 										{:else}
-											<button type="button" class="cursor-default bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 text-left w-full truncate" ondblclick={() => { editingEventName = ev.name; editingEventId = ev.id; }}>{ev.name}</button>
+											<button type="button" class="cursor-pointer bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 text-left w-full truncate hover:text-slate-900" onclick={() => openCardEdit(ev.id)} ondblclick={() => { editingEventName = ev.name; editingEventId = ev.id; }} title="Click to edit · Double-click to rename">{ev.name}</button>
 										{/if}
 										<!-- Per-cell remove button removed (see comment on the domain header above). -->
 									</div>
@@ -1775,4 +1799,14 @@
 			</div>
 		</div>
 	</div>
+{/if}
+
+{#if cardEditNode}
+	<CardEditModal
+		node={cardEditNode}
+		typeLabel="Event"
+		onSave={handleCardEditSave}
+		onDelete={handleCardEditDelete}
+		onClose={() => (cardEditId = null)}
+	/>
 {/if}
