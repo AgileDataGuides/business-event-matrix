@@ -26,7 +26,7 @@ The demo includes three example matrix so you can explore the app straight away.
 
 ## Install and Run
 
-Double-click `start-BEM.command` (macOS) or run `./start-BEM.sh` from the terminal.
+Run `./start-BEM.sh` from the terminal.
 
 The app starts at [http://localhost:5121](http://localhost:5121).
 
