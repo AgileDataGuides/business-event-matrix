@@ -22,15 +22,12 @@ function lsSaveAll(models: Record<string, DomainModel>): void {
 	localStorage.setItem(LS_KEY, JSON.stringify(models));
 }
 
-// Seed JSONs imported at build time so the demo starts populated.
-import iceCreamShop from '$data/ice-cream-shop.json';
-import lawrenceCorr from '$data/lawrence-corr-beam-bem.json';
-import saasRevenue from '$data/saas-revenue-events-matrix-2.json';
-const DEMO_SEED_MODELS: DomainModel[] = [
-	iceCreamShop as unknown as DomainModel,
-	lawrenceCorr as unknown as DomainModel,
-	saasRevenue as unknown as DomainModel
-];
+// Demo seeds (the three example matrices that ship with the standalone
+// repo) are now seeded BEFORE this store initialises, by
+// `applyBemDemoSeeds()` in `./demo-seed.ts`. That file owns the `$data`
+// imports and the version-aware overlay logic. Keeping those imports out
+// of this file means the CP frontend (which transitively pulls type/util
+// imports from here) doesn't need a `$data` alias.
 
 function stripDateTimeSuffix(name: string): string {
 	return name.replace(/-\d{4}-\d{2}-\d{2}-\d{6}$/, '');
@@ -217,23 +214,13 @@ export function createBemStore(options: BemStoreOptions = {}) {
 		if (loaded) return;
 		const models = await apiListModels();
 		if (models.length === 0) {
-			// In demo mode, seed all three example matrices that ship with the
-			// standalone repo so visitors see a populated app instead of a
-			// single ice-cream-shop seed.
-			if (DEMO_MODE) {
-				for (const m of DEMO_SEED_MODELS) {
-					const migrated = migrateModel(JSON.parse(JSON.stringify(m)));
-					await apiCreateModel(migrated);
-				}
-				const all = (await apiListModels()).map(migrateModel);
-				savedList = all.map((m) => ({ id: m.id, name: m.name }));
-				model = all[0];
-			} else {
-				const example = makeExampleModel();
-				await apiCreateModel(example);
-				savedList = [{ id: example.id, name: example.name }];
-				model = example;
-			}
+			// Cold start (demo localStorage empty AFTER applyBemDemoSeeds(),
+			// or first dev-server run with no data/ files). Fall back to a
+			// single makeExampleModel so the canvas isn't blank.
+			const example = makeExampleModel();
+			await apiCreateModel(example);
+			savedList = [{ id: example.id, name: example.name }];
+			model = example;
 		} else {
 			const migrated = models.map(migrateModel);
 			savedList = migrated.map((m) => ({ id: m.id, name: m.name }));

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, setContext } from 'svelte';
 	import { createBemStore } from '$lib/stores/domain.svelte';
+	import { applyBemDemoSeeds } from '$lib/stores/demo-seed';
 	import { createStandaloneAdapter } from '$lib/adapters/standalone-adapter';
 	import { bemToContextPlane, contextPlaneToBem } from '$lib/converters/context-plane';
 	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
@@ -123,6 +124,11 @@
 	setContext('dataAdapter', proxyAdapter);
 
 	onMount(async () => {
+		// Apply demo seeds BEFORE initStore so the store sees seeded localStorage
+		// as the source of truth on first/cold visit. No-op outside demo mode.
+		const isDemo = import.meta.env.VITE_DEMO_MODE === 'true';
+		if (isDemo) applyBemDemoSeeds();
+
 		await store.initStore();
 		const sa = createStandaloneAdapter(store);
 		realAdapter = sa.adapter;

@@ -11,9 +11,12 @@
  * - The SA app owns this file (canvas-deduplication / Phase 8 of the integration).
  * - The CP frontend imports it via the `business-domain-models/exports` workspace
  *   path (registered in this app's package.json `exports` map).
+ * - XLSX construction is delegated to `@context-plane/shared/xlsx` so every SA
+ *   app shares one ExcelJS wrapper. `xlsx` (SheetJS) is BANNED in this monorepo;
+ *   a CI guardrail blocks any reintroduction.
  */
 
-import ExcelJS from 'exceljs';
+import { buildXlsxBlob, downloadXlsx, type SheetSpec } from '@context-plane/shared/xlsx';
 import type { DomainModel } from './types';
 
 /** Build the BEM matrix as a CSV string. Same column ordering as XLSX sheet 1. */
@@ -53,12 +56,8 @@ export function bemModelToCsv(model: DomainModel): string {
 /**
  * Build the BEM matrix as an XLSX `Blob`. Three sheets: Matrix, Domains, Concepts.
  * Caller is responsible for triggering the download (`downloadBemBlob`).
- *
- * Async because ExcelJS's `writeBuffer` returns a Promise.
  */
 export async function bemModelToXlsxBlob(model: DomainModel): Promise<Blob> {
-	const wb = new ExcelJS.Workbook();
-
 	const sortedDomains = [...(model.domains || [])].sort((a, b) =>
 		a.name.localeCompare(b.name)
 	);
@@ -70,11 +69,11 @@ export async function bemModelToXlsxBlob(model: DomainModel): Promise<Blob> {
 	);
 
 	// Sheet 1: Event Matrix
-	const headers = ['Event Name', 'Event Description'];
-	for (const dom of sortedDomains) headers.push(`Domain: ${dom.name}`);
-	for (const c of sortedConcepts) headers.push(`${c.w}: ${c.name}`);
+	const matrixHeaders = ['Event Name', 'Event Description'];
+	for (const dom of sortedDomains) matrixHeaders.push(`Domain: ${dom.name}`);
+	for (const c of sortedConcepts) matrixHeaders.push(`${c.w}: ${c.name}`);
 
-	const matrixData = sortedEvents.map((ev) => {
+	const matrixRows = sortedEvents.map((ev) => {
 		const row: string[] = [ev.name, ev.description || ''];
 		for (const dom of sortedDomains) {
 			const mark = ev.domains?.[dom.id] || '';
@@ -86,49 +85,49 @@ export async function bemModelToXlsxBlob(model: DomainModel): Promise<Blob> {
 		}
 		return row;
 	});
-	const sheetTitle = (model.name || 'Matrix').slice(0, 31);
-	const matrixSheet = wb.addWorksheet(sheetTitle);
-	matrixSheet.addRows([headers, ...matrixData]);
+
+	const sheets: SheetSpec[] = [
+		{ title: model.name || 'Matrix', rows: [matrixHeaders, ...matrixRows] }
+	];
 
 	// Sheet 2: Domains
 	if (sortedDomains.length > 0) {
-		const domHeaders = ['Domain Name', 'Description', 'Owner', 'Aliases'];
-		const domData = sortedDomains.map((d) => [
-			d.name,
-			d.description || '',
-			d.owner || '',
-			(d.aliases || []).join(', ')
-		]);
-		const domSheet = wb.addWorksheet('Domains');
-		domSheet.addRows([domHeaders, ...domData]);
+		sheets.push({
+			title: 'Domains',
+			rows: [
+				['Domain Name', 'Description', 'Owner', 'Aliases'],
+				...sortedDomains.map((d) => [
+					d.name,
+					d.description || '',
+					d.owner || '',
+					(d.aliases || []).join(', ')
+				])
+			]
+		});
 	}
 
 	// Sheet 3: Concepts
-	const conceptHeaders = ['Concept Name', 'W Category', 'Description', 'Aliases'];
-	const conceptData = sortedConcepts.map((c) => [
-		c.name,
-		c.w,
-		c.description || '',
-		(c.aliases || []).join(', ')
-	]);
-	const conceptSheet = wb.addWorksheet('Concepts');
-	conceptSheet.addRows([conceptHeaders, ...conceptData]);
-
-	const buffer = await wb.xlsx.writeBuffer();
-	return new Blob([buffer], {
-		type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+	sheets.push({
+		title: 'Concepts',
+		rows: [
+			['Concept Name', 'W Category', 'Description', 'Aliases'],
+			...sortedConcepts.map((c) => [
+				c.name,
+				c.w,
+				c.description || '',
+				(c.aliases || []).join(', ')
+			])
+		]
 	});
+
+	return buildXlsxBlob(sheets);
 }
 
-/** Trigger a download of an arbitrary Blob via a transient `<a download>` element. */
-export function downloadBemBlob(blob: Blob, filename: string): void {
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = filename;
-	a.click();
-	URL.revokeObjectURL(url);
-}
+/**
+ * Trigger a download of an arbitrary Blob via a transient `<a download>` element.
+ * Re-exported from the shared helper so existing call sites keep working.
+ */
+export const downloadBemBlob = downloadXlsx;
 
 /** Build a slug + timestamp filename in the SA's existing format. */
 export function bemExportFilename(modelName: string, ext: 'csv' | 'xlsx'): string {
