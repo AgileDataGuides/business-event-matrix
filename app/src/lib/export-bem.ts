@@ -16,7 +16,7 @@
  *   a CI guardrail blocks any reintroduction.
  */
 
-import { buildXlsxBlob, downloadXlsx, type SheetSpec } from '@context-plane/shared/xlsx';
+import { buildXlsxBlob, downloadXlsx, type SheetSpec } from '$lib/cp-shared-xlsx';
 import type { DomainModel } from './types';
 
 /** Build the BEM matrix as a CSV string. Same column ordering as XLSX sheet 1. */

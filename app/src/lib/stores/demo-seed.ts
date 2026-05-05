@@ -7,7 +7,7 @@
 // Bump SEED_VERSION when bundled JSONs change so returning visitors get
 // the updated examples on next load.
 
-import { applyDemoSeeds } from '@context-plane/shared/demo-seed';
+import { applyDemoSeeds } from '$lib/cp-shared-demo-seed';
 import type { DomainModel } from '../types';
 
 import iceCreamShop from '$data/ice-cream-shop.json';
