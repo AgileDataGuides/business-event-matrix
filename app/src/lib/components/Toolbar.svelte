@@ -13,6 +13,7 @@
 
 	const tabs = [
 		{ id: 'matrix', label: 'Matrix' },
+		{ id: 'canvas', label: 'Canvas' },
 		{ id: 'instructions', label: 'Instructions' }
 	];
 

@@ -10,7 +10,6 @@
 	import { getContext } from 'svelte';
 	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
 	import { getNodeLabels } from '$lib/cp-shared';
-	import CardEditModal from '$lib/components/canvas/CardEditModal.svelte';
 
 	// W constants (duplicated from BEM app to avoid cross-app import)
 	type W = 'who' | 'what' | 'when' | 'where' | 'why' | 'how' | 'how many';
@@ -726,28 +725,12 @@
 	let editingDomainId = $state<string | null>(null);
 	let editingDimId = $state<string | null>(null);
 
-	// Event card edit modal — clicking an event's row name opens this modal
-	// to edit name + description or delete the event. Domains + concepts
-	// have their own existing column-header modal (with extra fields like
-	// W category and definition); this is the cards path.
-	let cardEditId = $state<string | null>(null);
-	const cardEditNode = $derived(
-		cardEditId ? eventNodes.find((n) => n.id === cardEditId) ?? null : null
-	);
-
-	function openCardEdit(id: string) {
-		cardEditId = id;
-	}
-
-	async function handleCardEditSave(updates: { name: string; description: string }) {
-		if (!cardEditId) return;
-		await adapter.updateNode(cardEditId, updates);
-	}
-
-	async function handleCardEditDelete() {
-		if (!cardEditId) return;
-		await adapter.deleteNode(cardEditId);
-	}
+	// Event card click → onSelectNode(id), routed up to +page.svelte which
+	// mounts a single BemCardEditModal. The same modal also opens for
+	// domain/concept row clicks (their button already calls onSelectNode).
+	// The legacy tooltip "Edit details" button still triggers the inline
+	// rich modal further down — it has the same fields and overlaps with
+	// BemCardEditModal but provides a hover-driven entry point.
 
 	async function handleModelNameChange(newName: string) {
 		const trimmed = newName.trim();
@@ -817,193 +800,11 @@
 		}
 	});
 
-	// ── Edit details modal state ──
-	let editingDescId = $state<string | null>(null);
-	let editingDescType = $state<'domain' | 'concept'>('domain');
-	let editingNameValue = $state('');
-	let editingDescValue = $state('');
-	let editingAliasesValue = $state('');
-	let editingOwnerValue = $state('');
-	let editingW = $state<W>('who');
-	let editingNotesValue = $state('');
-	let editingDefCategory = $state('');
-	let editingDefDifferentiator = $state('');
-	let defCatQuery = $state('');
-	let defCatFocusIdx = $state(-1);
-	let showDefCatDropdown = $state(false);
-
-	const defCatSuggestions = $derived.by(() => {
-		const q = defCatQuery.toLowerCase().trim();
-		if (!q) return [] as ContextNode[];
-		return conceptNodes
-			.filter((n) => n.id !== editingDescId && n.name.toLowerCase().includes(q))
-			.sort((a, b) => a.name.localeCompare(b.name))
-			.slice(0, 8);
-	});
-
-	function handleDefCatInput() {
-		defCatQuery = editingDefCategory;
-		showDefCatDropdown = defCatSuggestions.length > 0;
-		defCatFocusIdx = -1;
-	}
-
-	function selectDefCatConcept(concept: ContextNode) {
-		editingDefCategory = concept.name;
-		defCatQuery = '';
-		showDefCatDropdown = false;
-		defCatFocusIdx = -1;
-	}
-
-	function handleDefCatKeydown(e: KeyboardEvent) {
-		if (!showDefCatDropdown) return;
-		if (e.key === 'ArrowDown') {
-			e.preventDefault();
-			defCatFocusIdx = Math.min(defCatFocusIdx + 1, defCatSuggestions.length - 1);
-		} else if (e.key === 'ArrowUp') {
-			e.preventDefault();
-			defCatFocusIdx = Math.max(defCatFocusIdx - 1, -1);
-		} else if (e.key === 'Enter' && defCatFocusIdx >= 0) {
-			e.preventDefault();
-			selectDefCatConcept(defCatSuggestions[defCatFocusIdx]);
-		} else if (e.key === 'Escape') {
-			showDefCatDropdown = false;
-		}
-	}
-
-	// ── @mention in differentiator ──
-	let mentionQuery = $state('');
-	let mentionStartPos = $state(-1);
-	let showMentionDropdown = $state(false);
-	let mentionFocusIdx = $state(-1);
-	let mentionInputEl = $state<HTMLInputElement | null>(null);
-
-	const glossaryTerms = $derived(nodes.filter((n) => getNodeLabels(n).includes('global_glossary_term')));
-
-	const mentionSuggestions = $derived.by(() => {
-		const q = mentionQuery.toLowerCase().trim();
-		if (!q) return [] as ContextNode[];
-		return glossaryTerms
-			.filter((n: ContextNode) => n.name.toLowerCase().includes(q))
-			.sort((a: ContextNode, b: ContextNode) => a.name.localeCompare(b.name))
-			.slice(0, 8);
-	});
-
-	function handleDiffInput(e: Event) {
-		const input = e.target as HTMLInputElement;
-		const pos = input.selectionStart ?? 0;
-		const text = editingDefDifferentiator.substring(0, pos);
-		let atPos = -1;
-		for (let i = text.length - 1; i >= 0; i--) {
-			if (text[i] === '@') { atPos = i; break; }
-			if (text[i] === '}') break;
-		}
-		if (atPos >= 0) {
-			const after = text.substring(atPos + 1);
-			if (after.includes('{')) {
-				if (after.includes('}')) { showMentionDropdown = false; return; }
-				mentionQuery = after.substring(1);
-			} else {
-				mentionQuery = after;
-			}
-			mentionStartPos = atPos;
-			showMentionDropdown = mentionQuery.length > 0;
-			mentionFocusIdx = -1;
-		} else {
-			showMentionDropdown = false;
-		}
-	}
-
-	function selectMention(term: ContextNode) {
-		const input = mentionInputEl;
-		const pos = input?.selectionStart ?? editingDefDifferentiator.length;
-		const before = editingDefDifferentiator.substring(0, mentionStartPos);
-		const after = editingDefDifferentiator.substring(pos);
-		editingDefDifferentiator = before + '@{' + term.name + '} ' + after;
-		showMentionDropdown = false;
-		mentionFocusIdx = -1;
-		const newPos = before.length + term.name.length + 4;
-		setTimeout(() => { if (input) { input.focus(); input.setSelectionRange(newPos, newPos); } }, 0);
-	}
-
-	function handleDiffKeydown(e: KeyboardEvent) {
-		if (!showMentionDropdown || mentionSuggestions.length === 0) return;
-		if (e.key === 'ArrowDown') {
-			e.preventDefault();
-			mentionFocusIdx = Math.min(mentionFocusIdx + 1, mentionSuggestions.length - 1);
-		} else if (e.key === 'ArrowUp') {
-			e.preventDefault();
-			mentionFocusIdx = Math.max(mentionFocusIdx - 1, -1);
-		} else if (e.key === 'Enter' && mentionFocusIdx >= 0) {
-			e.preventDefault();
-			selectMention(mentionSuggestions[mentionFocusIdx]);
-		} else if (e.key === 'Escape') {
-			showMentionDropdown = false;
-		}
-	}
-
-	function openEditModal(id: string, type: 'domain' | 'concept') {
-		const item = type === 'domain'
-			? domainNodes.find((d) => d.id === id)
-			: orderedConcepts.find((d) => d.id === id);
-		if (!item) return;
-		editingDescId = id;
-		editingDescType = type;
-		editingNameValue = item.name;
-		editingDescValue = item.description || '';
-		editingAliasesValue = ((item.properties?.aliases as string[]) || []).join(', ');
-		editingOwnerValue = (item.properties?.owner as string) || '';
-		editingW = (item.properties?.w as W) || 'who';
-		editingNotesValue = (item.properties?.notes as string) || '';
-		editingDefCategory = (item.properties?.definitionCategory as string) || '';
-		editingDefDifferentiator = (item.properties?.definitionDifferentiator as string) || '';
-		defCatQuery = '';
-		showDefCatDropdown = false;
-		defCatFocusIdx = -1;
-		showMentionDropdown = false;
-		mentionFocusIdx = -1;
-		tooltipId = null;
-	}
-
-	async function saveEditModal() {
-		if (!editingDescId) return;
-		const aliases = editingAliasesValue.split(',').map((a) => a.trim()).filter((a) => a.length > 0);
-		if (editingDescType === 'domain') {
-			await adapter.updateNode(editingDescId, {
-				name: editingNameValue,
-				description: editingDescValue,
-				properties: { aliases, owner: editingOwnerValue, notes: editingNotesValue, order: domainNodes.find((d) => d.id === editingDescId)?.properties?.order }
-			});
-		} else {
-			await adapter.updateNode(editingDescId, {
-				name: editingNameValue,
-				description: editingDescValue,
-				properties: { aliases, w: editingW, notes: editingNotesValue, order: orderedConcepts.find((d) => d.id === editingDescId)?.properties?.order, definitionCategory: editingDefCategory, definitionDifferentiator: editingDefDifferentiator }
-			});
-		}
-		editingDescId = null;
-	}
-
-	/**
-	 * Delete the domain or concept currently open in the edit modal. Confirms
-	 * before deleting (this is destructive — removes the row/column from the
-	 * matrix and any cells linked to it). Closes the modal on success.
-	 */
-	async function deleteFromEditModal() {
-		if (!editingDescId) return;
-		const name = editingNameValue || (editingDescType === 'domain' ? 'this domain' : 'this concept');
-		const kind = editingDescType === 'domain' ? 'domain' : 'concept';
-		const ok = window.confirm(
-			`Delete ${kind} "${name}"?\n\nThis removes it from the matrix and deletes all its cells. This cannot be undone.`
-		);
-		if (!ok) return;
-		try {
-			await adapter.deleteNode(editingDescId);
-		} catch (e) {
-			alert(`Failed to delete: ${e instanceof Error ? e.message : String(e)}`);
-			return;
-		}
-		editingDescId = null;
-	}
+	// Editing of domains/concepts/events now flows through the parent's
+	// BemCardEditModal — see ./BemCardEditModal.svelte. Click handlers in
+	// this layout call onSelectNode(id) to open it. Inline name rename
+	// (double-click) is handled below by handleDomainNameChange /
+	// handleConceptNameChange.
 
 	async function handleDomainNameChange(domNode: ContextNode, newName: string) {
 		const trimmed = newName.trim();
@@ -1524,7 +1325,7 @@
 												class="text-xs font-semibold px-1 py-0.5 border border-blue-400 rounded outline-none w-full"
 											/>
 										{:else}
-											<button type="button" class="cursor-pointer bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 text-left w-full truncate hover:text-slate-900" onclick={() => openCardEdit(ev.id)} ondblclick={() => { editingEventName = ev.name; editingEventId = ev.id; }} title="Click to edit · Double-click to rename">{ev.name}</button>
+											<button type="button" class="cursor-pointer bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 text-left w-full truncate hover:text-slate-900" onclick={() => onSelectNode(ev.id)} ondblclick={() => { editingEventName = ev.name; editingEventId = ev.id; }} title="Click to edit · Double-click to rename">{ev.name}</button>
 										{/if}
 										<!-- Per-cell remove button removed (see comment on the domain header above). -->
 									</div>
@@ -1657,7 +1458,7 @@
 			{/if}
 			<button
 				class="mt-2 text-[10px] underline cursor-pointer" style="color: {tooltipItem.color};"
-				onclick={() => openEditModal(tooltipId!, tooltipType)}
+				onclick={() => { if (tooltipId) onSelectNode(tooltipId); tooltipId = null; }}
 			>Edit details</button>
 		</div>
 	</div>
@@ -1678,135 +1479,8 @@
 	</div>
 {/if}
 
-<!-- Edit details modal (shared for domains and concepts) -->
-{#if editingDescId}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onclick={() => (editingDescId = null)}>
-		<div class="bg-white rounded-xl shadow-xl border border-slate-200 p-5 w-full max-w-md" onclick={(e) => e.stopPropagation()}>
-			<h3 class="text-sm font-bold text-slate-700 mb-3">{editingDescType === 'domain' ? 'Domain' : 'Concept'} Details</h3>
-			<label class="block text-xs font-medium text-slate-500 mb-1" for="edit-name">Name</label>
-			<input
-				id="edit-name"
-				type="text"
-				bind:value={editingNameValue}
-				class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-			/>
-			<label class="block text-xs font-medium text-slate-500 mb-1 mt-3" for="edit-aliases">Aliases <span class="text-slate-400 font-normal">(comma-separated)</span></label>
-			<input
-				id="edit-aliases"
-				type="text"
-				bind:value={editingAliasesValue}
-				placeholder="e.g. Revenue, Income"
-				class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-			/>
-			<label class="block text-xs font-medium text-slate-500 mb-1 mt-3" for="edit-desc">Description</label>
-			<textarea
-				id="edit-desc"
-				bind:value={editingDescValue}
-				placeholder="Describe what this {editingDescType === 'domain' ? 'domain' : 'concept'} covers..."
-				rows={3}
-				class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
-			></textarea>
-			{#if editingDescType === 'domain'}
-				<label class="block text-xs font-medium text-slate-500 mb-1 mt-3" for="edit-owner">Domain Owner</label>
-				<input
-					id="edit-owner"
-					type="text"
-					bind:value={editingOwnerValue}
-					placeholder="e.g. Sales Manager, Jane Smith"
-					class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-				/>
-			{:else}
-				<label class="block text-xs font-medium text-slate-500 mb-1 mt-3" for="edit-wtype">W's</label>
-				<select id="edit-wtype" bind:value={editingW} class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-					{#each WS as wt}
-						<option value={wt}>{W_LABELS[wt]}</option>
-					{/each}
-				</select>
-			{/if}
-			{#if editingDescType === 'concept'}
-				<div class="mt-3 rounded-lg border border-orange-200 bg-orange-50/50 p-3">
-					<label class="block text-xs font-medium text-orange-600 mb-2">Definition</label>
-					<p class="text-xs text-slate-500 mb-2">A <strong>{editingNameValue || 'concept'}</strong> is a <span class="text-orange-600 font-medium">[broader category]</span> that <span class="text-orange-600 font-medium">[distinguishing feature]</span></p>
-					<div class="flex items-center gap-2 text-sm text-slate-700">
-						<span class="text-xs text-slate-400 shrink-0">is a</span>
-						<div class="relative flex-1">
-						<input type="text" bind:value={editingDefCategory} placeholder="broader category (genus)"
-							oninput={handleDefCatInput}
-							onkeydown={handleDefCatKeydown}
-							onfocus={() => { defCatQuery = editingDefCategory; handleDefCatInput(); }}
-							onblur={() => setTimeout(() => { showDefCatDropdown = false; }, 150)}
-							autocomplete="off"
-							class="w-full px-2 py-1 border border-orange-200 rounded text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none bg-white" />
-						{#if showDefCatDropdown && defCatSuggestions.length > 0}
-							<div class="absolute top-full left-0 mt-1 bg-white rounded-lg border border-orange-200 shadow-xl z-[60] py-1 w-56 max-h-40 overflow-y-auto">
-								{#each defCatSuggestions as concept, i}
-									<button
-										type="button"
-										onmousedown={(e) => { e.preventDefault(); selectDefCatConcept(concept); }}
-										class="w-full text-left px-3 py-1.5 text-sm transition-colors {i === defCatFocusIdx ? 'bg-orange-50 text-orange-800' : 'text-slate-700 hover:bg-slate-50'}"
-									>
-										<span class="font-medium">{concept.name}</span>
-									</button>
-								{/each}
-							</div>
-						{/if}
-					</div>
-					</div>
-					<div class="flex items-center gap-2 text-sm text-slate-700 mt-1.5">
-						<span class="text-xs text-slate-400 shrink-0">that</span>
-						<div class="relative flex-1">
-							<input type="text" bind:value={editingDefDifferentiator} bind:this={mentionInputEl}
-								placeholder="distinguishing feature (type @ to link)"
-								oninput={handleDiffInput}
-								onkeydown={handleDiffKeydown}
-								onblur={() => setTimeout(() => { showMentionDropdown = false; }, 150)}
-								autocomplete="off"
-								class="w-full px-2 py-1 border border-orange-200 rounded text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none bg-white" />
-							{#if showMentionDropdown && mentionSuggestions.length > 0}
-								<div class="absolute top-full left-0 mt-1 bg-white rounded-lg border border-orange-200 shadow-xl z-[60] py-1 w-64 max-h-40 overflow-y-auto">
-									{#each mentionSuggestions as term, i}
-										<button
-											type="button"
-											onmousedown={(e) => { e.preventDefault(); selectMention(term); }}
-											class="w-full text-left px-3 py-1.5 text-sm transition-colors flex items-center gap-2 {i === mentionFocusIdx ? 'bg-orange-50 text-orange-800' : 'text-slate-700 hover:bg-slate-50'}"
-										>
-											<span class="inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-700 border border-orange-200">@</span>
-											<span class="font-medium">{term.name}</span>
-										</button>
-									{/each}
-								</div>
-							{/if}
-						</div>
-					</div>
-				</div>
-			{/if}
-			<label class="block text-xs font-medium text-slate-500 mb-1 mt-3" for="edit-notes">Notes</label>
-			<textarea
-				id="edit-notes"
-				bind:value={editingNotesValue}
-				placeholder="Additional notes..."
-				rows={3}
-				class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
-			></textarea>
-			<div class="flex justify-between items-center gap-2 mt-4">
-				<!-- Delete on the left, away from Save, to reduce mis-click risk; uses
-				     the documented danger-button red palette (see tokens.md § buttons.danger_delete_header). -->
-				<button onclick={deleteFromEditModal} class="px-3 py-1.5 text-sm font-medium rounded-lg bg-white text-red-600 border border-red-300 hover:bg-red-50 transition-colors">Delete</button>
-				<div class="flex gap-2">
-					<button onclick={() => (editingDescId = null)} class="px-3 py-1.5 text-sm font-medium rounded-lg bg-white text-slate-500 border border-slate-300 hover:bg-slate-50 transition-colors">Cancel</button>
-					<button onclick={saveEditModal} class="px-3 py-1.5 text-sm font-medium rounded-lg bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 transition-colors">Save</button>
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
+<!-- Edit details modal — extracted to BemCardEditModal and mounted by
+     +page.svelte at the parent level. Click handlers in this layout
+     (row name, tooltip "Edit details") call onSelectNode(id) which
+     routes up to the modal. -->
 
-{#if cardEditNode}
-	<CardEditModal
-		node={cardEditNode}
-		typeLabel="Event"
-		onSave={handleCardEditSave}
-		onDelete={handleCardEditDelete}
-		onClose={() => (cardEditId = null)}
-	/>
-{/if}

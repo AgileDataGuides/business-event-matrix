@@ -8,6 +8,8 @@
 	import Toolbar from '$lib/components/Toolbar.svelte';
 	import Instructions from '$lib/components/Instructions.svelte';
 	import BusinessEventMatrixLayout from '$lib/components/canvas/BusinessEventMatrixLayout.svelte';
+	import BemCanvasView from '$lib/components/canvas/BemCanvasView.svelte';
+	import BemCardEditModal from '$lib/components/canvas/BemCardEditModal.svelte';
 
 	const store = createBemStore();
 	setContext('bemStore', store);
@@ -136,7 +138,19 @@
 		await loadOtherModelConcepts();
 	});
 
-	function handleSelectNode(id: string) {}
+	// Card edit modal — clicking a card on the Canvas tab (or a domain/concept
+	// label on the Matrix tab) opens BemCardEditModal with the same fields the
+	// Matrix tab's "Edit details" tooltip button uses: name, description,
+	// aliases, owner (domain) / w-type + definition (concept), notes. Save /
+	// delete go through the DataAdapter from context.
+	let editingCardId = $state<string | null>(null);
+	const editingCardNode = $derived(
+		editingCardId ? nodes.find((n) => n.id === editingCardId) ?? null : null
+	);
+
+	function handleSelectNode(id: string) {
+		editingCardId = id;
+	}
 
 	async function handleAddNode(entityLabel: string, name: string) {
 		await proxyAdapter.createNode({ label: entityLabel, name });
@@ -196,11 +210,14 @@
 	</div>
 </header>
 
+{#if loaded}
+	<div class="px-6 py-3 border-b border-slate-200 bg-white shrink-0">
+		<Toolbar bind:activeTab />
+	</div>
+{/if}
+
 {#if activeTab === 'matrix'}
 	{#if loaded}
-		<div class="px-6 py-3 border-b border-slate-200 bg-white shrink-0">
-			<Toolbar bind:activeTab />
-		</div>
 		<div class="flex-1 overflow-hidden flex flex-col">
 			<BusinessEventMatrixLayout
 				{nodes}
@@ -215,13 +232,29 @@
 	{:else}
 		<div class="flex items-center justify-center h-64 text-slate-400 text-sm">Loading...</div>
 	{/if}
-{:else}
+{:else if activeTab === 'canvas'}
 	{#if loaded}
-		<div class="px-6 py-3 border-b border-slate-200 bg-white shrink-0">
-			<Toolbar bind:activeTab />
+		<div class="flex-1 overflow-hidden flex flex-col">
+			<BemCanvasView
+				{nodes}
+				{links}
+				onSelectNode={handleSelectNode}
+				onAddNode={handleAddNode}
+			/>
 		</div>
+	{:else}
+		<div class="flex items-center justify-center h-64 text-slate-400 text-sm">Loading...</div>
 	{/if}
+{:else}
 	<div class="p-6 overflow-y-auto flex-1">
 		<Instructions />
 	</div>
+{/if}
+
+{#if editingCardNode}
+	<BemCardEditModal
+		node={editingCardNode}
+		allNodes={nodes}
+		onClose={() => (editingCardId = null)}
+	/>
 {/if}
