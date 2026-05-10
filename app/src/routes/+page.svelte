@@ -9,7 +9,7 @@
 	import Instructions from '$lib/components/Instructions.svelte';
 	import BusinessEventMatrixLayout from '$lib/components/canvas/BusinessEventMatrixLayout.svelte';
 	import BemCanvasView from '$lib/components/canvas/BemCanvasView.svelte';
-	import ConceptCardEditModal from '@context-plane/shared/components/ConceptCardEditModal.svelte';
+	import ConceptCardEditModal from '$lib/components/canvas/ConceptCardEditModal.svelte';
 
 	const store = createBemStore();
 	setContext('bemStore', store);
