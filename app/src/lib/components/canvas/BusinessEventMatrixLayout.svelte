@@ -10,6 +10,7 @@
 	import { getContext } from 'svelte';
 	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
 	import { getNodeLabels } from '$lib/cp-shared';
+	import BemCanvasView from './BemCanvasView.svelte';
 
 	// W constants (duplicated from BEM app to avoid cross-app import)
 	type W = 'who' | 'what' | 'when' | 'where' | 'why' | 'how' | 'how many';
@@ -41,7 +42,16 @@
 		onImportJson,
 		onExportPdf,
 		onExportCsv,
-		onExportXlsx
+		onExportXlsx,
+		// Opt-in: when both `activeBemTab` and `onBemTabChange` are provided,
+		// the internal Tier 3 tab strip renders as `Matrix | Canvas` and the
+		// layout body switches between the matrix grid and BemCanvasView.
+		// Used by the CP frontend to give its embedded BEM canvas the same
+		// Matrix/Canvas split the SA app exposes via its Toolbar tabs.
+		// SA keeps `showTabs={false}` and continues routing through its own
+		// Toolbar — these props are inert there.
+		activeBemTab,
+		onBemTabChange
 	}: {
 		nodes: ContextNode[];
 		links: ContextLink[];
@@ -60,7 +70,14 @@
 		onExportPdf?: () => Promise<void>;
 		onExportCsv?: () => void;
 		onExportXlsx?: () => void;
+		activeBemTab?: 'matrix' | 'canvas';
+		onBemTabChange?: (tab: 'matrix' | 'canvas') => void;
 	} = $props();
+
+	// True when the caller has opted into the layout-owned Matrix/Canvas tabs.
+	// When false (SA app), the internal strip renders the legacy single
+	// "Matrix" button and the body always shows the matrix grid.
+	const tabsControlled = $derived(activeBemTab !== undefined && onBemTabChange !== undefined);
 
 	// Backward-compat: legacy showModelSelector maps to showSwitcher when showSwitcher not explicitly set
 	const effectiveShowSwitcher = $derived(showSwitcher ?? showModelSelector);
@@ -726,11 +743,11 @@
 	let editingDimId = $state<string | null>(null);
 
 	// Event card click → onSelectNode(id), routed up to +page.svelte which
-	// mounts a single BemCardEditModal. The same modal also opens for
+	// mounts a single ConceptCardEditModal. The same modal also opens for
 	// domain/concept row clicks (their button already calls onSelectNode).
 	// The legacy tooltip "Edit details" button still triggers the inline
 	// rich modal further down — it has the same fields and overlaps with
-	// BemCardEditModal but provides a hover-driven entry point.
+	// ConceptCardEditModal but provides a hover-driven entry point.
 
 	async function handleModelNameChange(newName: string) {
 		const trimmed = newName.trim();
@@ -801,7 +818,7 @@
 	});
 
 	// Editing of domains/concepts/events now flows through the parent's
-	// BemCardEditModal — see ./BemCardEditModal.svelte. Click handlers in
+	// ConceptCardEditModal — see ./ConceptCardEditModal.svelte. Click handlers in
 	// this layout call onSelectNode(id) to open it. Inline name rename
 	// (double-click) is handled below by handleDomainNameChange /
 	// handleConceptNameChange.
@@ -974,12 +991,38 @@
 		</div>
 	{/if}
 
-	<!-- Tier 3: Tabs (§ Tier 3 — blue-600 active, slate-400 inactive) -->
+	<!-- Tier 3: Tabs (§ Tier 3 — blue-600 active, slate-400 inactive)
+	     When `activeBemTab` + `onBemTabChange` are both supplied (CP), the
+	     strip becomes a real toggle: Matrix grid vs BemCanvasView. SA app
+	     passes neither and gets the legacy single-tab look. -->
 	{#if selectedModel && showTabs}
 		<div class="flex gap-0 px-4 border-b border-slate-200 mb-3">
-			<button class="flex items-center px-3.5 py-2 text-xs font-medium border-b-2 -mb-px text-blue-600 border-blue-600">Matrix</button>
+			{#if tabsControlled}
+				<button
+					type="button"
+					class="flex items-center px-3.5 py-2 text-xs font-medium border-b-2 -mb-px transition-colors {activeBemTab === 'matrix' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'}"
+					onclick={() => onBemTabChange?.('matrix')}
+				>Matrix</button>
+				<button
+					type="button"
+					class="flex items-center px-3.5 py-2 text-xs font-medium border-b-2 -mb-px transition-colors {activeBemTab === 'canvas' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'}"
+					onclick={() => onBemTabChange?.('canvas')}
+				>Canvas</button>
+			{:else}
+				<button class="flex items-center px-3.5 py-2 text-xs font-medium border-b-2 -mb-px text-blue-600 border-blue-600">Matrix</button>
+			{/if}
 		</div>
 	{/if}
+
+	{#if tabsControlled && activeBemTab === 'canvas'}
+		<BemCanvasView
+			{nodes}
+			{links}
+			{onSelectNode}
+			{onAddNode}
+			{onAddExisting}
+		/>
+	{:else}
 
 	{#if !selectedModel}
 		<div class="text-center py-12 text-slate-400">
@@ -1416,6 +1459,7 @@
 			</div>
 		{/if}
 	{/if}
+	{/if}
 </div>
 
 <!-- Hover tooltip for domains and concepts -->
@@ -1479,7 +1523,7 @@
 	</div>
 {/if}
 
-<!-- Edit details modal — extracted to BemCardEditModal and mounted by
+<!-- Edit details modal — extracted to ConceptCardEditModal and mounted by
      +page.svelte at the parent level. Click handlers in this layout
      (row name, tooltip "Edit details") call onSelectNode(id) which
      routes up to the modal. -->

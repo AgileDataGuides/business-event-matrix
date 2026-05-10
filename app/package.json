@@ -26,6 +26,7 @@
   },
   "exports": {
     "./canvas/BusinessEventMatrixLayout.svelte": "./src/lib/components/canvas/BusinessEventMatrixLayout.svelte",
+    "./canvas/BemCanvasView.svelte": "./src/lib/components/canvas/BemCanvasView.svelte",
     "./export-pdf": "./src/lib/export-pdf.ts",
     "./export-bem": "./src/lib/export-bem.ts"
   },

@@ -9,7 +9,7 @@
 	import Instructions from '$lib/components/Instructions.svelte';
 	import BusinessEventMatrixLayout from '$lib/components/canvas/BusinessEventMatrixLayout.svelte';
 	import BemCanvasView from '$lib/components/canvas/BemCanvasView.svelte';
-	import BemCardEditModal from '$lib/components/canvas/BemCardEditModal.svelte';
+	import ConceptCardEditModal from '@context-plane/shared/components/ConceptCardEditModal.svelte';
 
 	const store = createBemStore();
 	setContext('bemStore', store);
@@ -139,7 +139,8 @@
 	});
 
 	// Card edit modal — clicking a card on the Canvas tab (or a domain/concept
-	// label on the Matrix tab) opens BemCardEditModal with the same fields the
+	// label on the Matrix tab) opens the shared ConceptCardEditModal with the
+	// same fields the
 	// Matrix tab's "Edit details" tooltip button uses: name, description,
 	// aliases, owner (domain) / w-type + definition (concept), notes. Save /
 	// delete go through the DataAdapter from context.
@@ -252,7 +253,7 @@
 {/if}
 
 {#if editingCardNode}
-	<BemCardEditModal
+	<ConceptCardEditModal
 		node={editingCardNode}
 		allNodes={nodes}
 		onClose={() => (editingCardId = null)}
