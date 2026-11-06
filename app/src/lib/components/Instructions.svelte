@@ -45,7 +45,7 @@
 			<p>Create a new matrix, add events, domains, and concepts, then use Claude to review and improve it.</p>
 			<ol>
 				<li>Click <strong>New Matrix</strong> in the dark header to create a blank model.</li>
-				<li>Use the inline <strong>+ Event</strong>, <strong>+ Domain</strong>, and <strong>+ Concept</strong> toolbar buttons. Each one opens a create input — start typing and hit Enter to create a new one. </li>
+				<li>Use the inline <strong>+ Event</strong>, <strong>+ Domain</strong>, and <strong>+ Concept</strong> toolbar buttons. Each one opens a create input — start typing and hit Enter to create a new one. The <strong>+ Concept</strong> input also suggests the Concepts from your other matrices. Pick one to copy it into this matrix with its W, description and aliases.</li>
 				<li>Single-click any event, domain, or concept name to <strong>select</strong> it. Double-click to <strong>rename inline</strong>. Hover for the detail tooltip, then click <strong>Edit details</strong> to open the full edit modal (description, aliases, Aristotelian definition, notes, W-type, domain owner).</li>
 				<li>Click intersection cells to mark events ↔ concepts. Click again to toggle ✓ → ✭ → empty.</li>
 				<li>Drag the ⠿ handles to reorder events, domains, and concepts. Click a domain header (◂) or W-type header (◂) to collapse / expand its column group.</li>

@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount, setContext } from 'svelte';
+	import { onMount, setContext, untrack } from 'svelte';
 	import { createBemStore } from '$lib/stores/domain.svelte';
 	import { applyBemDemoSeeds } from '$lib/stores/demo-seed';
 	import { createStandaloneAdapter } from '$lib/adapters/standalone-adapter';
 	import { bemToContextPlane, contextPlaneToBem } from '$lib/converters/context-plane';
 	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
+	import { nodeHasLabel } from '$lib/cp-shared';
 	import Toolbar from '$lib/components/Toolbar.svelte';
 	import Instructions from '$lib/components/Instructions.svelte';
 	import BusinessEventMatrixLayout from '$lib/components/canvas/BusinessEventMatrixLayout.svelte';
@@ -81,23 +82,28 @@
 	// Extra concept nodes from other saved models (for typeahead linking)
 	let otherModelConcepts = $state<ContextNode[]>([]);
 
-	async function loadOtherModelConcepts() {
-		const savedList = store.getSavedList();
-		const currentId = store.getModel().id;
-		const extras: ContextNode[] = [];
-		for (const s of savedList) {
-			if (s.id === currentId) continue;
-			try {
-				const res = await fetch(`/api/models/${s.id}`);
-				const m = await res.json();
-				const { nodes: otherNodes } = bemToContextPlane(m);
-				for (const n of otherNodes) {
-					if (n.label === 'global_concept') extras.push(n);
+	async function loadOtherModelConcepts(currentId: string) {
+		const others = store.getSavedList().filter((s) => s.id !== currentId);
+		const perMatrix = await Promise.all(
+			others.map(async (s) => {
+				try {
+					// Concept nodes carry more than one label ('global_concept,global_glossary_term')
+					return bemToContextPlane(await store.readSavedModel(s.id)).nodes.filter((n) => nodeHasLabel(n, 'global_concept'));
+				} catch {
+					return [];
 				}
-			} catch {}
-		}
-		otherModelConcepts = extras;
+			})
+		);
+		// A quicker switch may have opened another matrix while this one was loading
+		if (store.getModel().id === currentId) otherModelConcepts = perMatrix.flat();
 	}
+
+	// Reload the other matrices' Concepts whenever a different matrix opens
+	$effect(() => {
+		if (!loaded) return;
+		const currentId = store.getModel().id;
+		untrack(() => loadOtherModelConcepts(currentId));
+	});
 
 	const graphData = $derived.by(() => {
 		void version;
@@ -105,19 +111,74 @@
 		return bemToContextPlane(store.getModel());
 	});
 
-	const nodes = $derived([...graphData.nodes, ...otherModelConcepts.filter((n) => !graphData.nodes.some((gn) => gn.id === n.id))]);
+	// The other matrices' Concepts are suggestions only: each name once, and never a
+	// node or a name this matrix already has (the list can lag a matrix switch).
+	// Only the + Concept typeahead gets them: the Canvas tab and the edit modal get graphData.nodes.
+	const suggestions = $derived.by(() => {
+		const ownIds = new Set(graphData.nodes.map((n) => n.id));
+		const taken = new Set(
+			graphData.nodes.filter((n) => nodeHasLabel(n, 'global_concept')).map((n) => n.name.toLowerCase())
+		);
+		return otherModelConcepts.filter((n) => {
+			const key = n.name.toLowerCase();
+			if (ownIds.has(n.id) || taken.has(key)) return false;
+			taken.add(key);
+			return true;
+		});
+	});
+	const nodes = $derived([...graphData.nodes, ...suggestions]);
 	const links = $derived(graphData.links);
 
 	let realAdapter: DataAdapter | null = null;
+
+	function otherModelConcept(id: string): ContextNode | undefined {
+		return suggestions.find((n) => n.id === id);
+	}
+
+	// The W picked for a suggestion that has none, held until the link copies it in.
+	// Kept off the suggestion itself, so the suggestion keeps its source matrix's W after the copy-in.
+	const pendingW = new Map<string, unknown>();
+
+	// A Concept from another matrix is not in this matrix's store, so the standalone
+	// adapter cannot link it. Picking one copies it into this matrix instead.
+	async function copyConceptIn(source: ContextNode, modelId: string): Promise<ContextLink> {
+		const p = source.properties ?? {};
+		const w = pendingW.get(source.id) ?? p.w;
+		pendingW.delete(source.id);
+		const created = await realAdapter!.createNode({ label: 'global_concept', name: source.name, properties: { w } });
+		await realAdapter!.updateNode(created.id, {
+			description: source.description ?? '',
+			properties: {
+				aliases: p.aliases ?? [],
+				notes: p.notes,
+				definitionCategory: p.definitionCategory,
+				definitionDifferentiator: p.definitionDifferentiator
+			}
+		});
+		const ts = new Date().toISOString();
+		return { id: `link-${modelId}-has-concept-${created.id}`, source_id: modelId, destination_id: created.id, label: 'has_concept', created_at: ts, updated_at: ts };
+	}
 
 	const proxyAdapter: DataAdapter = {
 		async getNodes(filter) { return realAdapter?.getNodes(filter) ?? []; },
 		async getNode(id) { return realAdapter?.getNode(id) ?? null; },
 		async createNode(input) { const result = await realAdapter!.createNode(input); version++; return result; },
-		async updateNode(id, updates) { const result = await realAdapter!.updateNode(id, updates); version++; return result; },
+		async updateNode(id, updates) {
+			const other = otherModelConcept(id);
+			if (other) {
+				pendingW.set(id, updates.properties?.w);
+				return { ...other, ...updates, properties: { ...other.properties, ...updates.properties } };
+			}
+			const result = await realAdapter!.updateNode(id, updates); version++; return result;
+		},
 		async deleteNode(id) { await realAdapter!.deleteNode(id); version++; },
 		async getLinks(filter) { return realAdapter?.getLinks(filter) ?? []; },
-		async createLink(input) { const result = await realAdapter!.createLink(input); version++; return result; },
+		async createLink(input) {
+			const other = input.label === 'has_concept' ? otherModelConcept(input.destination_id) : undefined;
+			const result = other ? await copyConceptIn(other, input.source_id) : await realAdapter!.createLink(input);
+			version++;
+			return result;
+		},
 		async deleteLink(id) { await realAdapter!.deleteLink(id); version++; },
 		async exportAll() { return realAdapter?.exportAll() ?? { nodes: [], links: [] }; },
 		async importAll(data) { await realAdapter?.importAll(data); version++; }
@@ -135,7 +196,6 @@
 		const sa = createStandaloneAdapter(store);
 		realAdapter = sa.adapter;
 		loaded = true;
-		await loadOtherModelConcepts();
 	});
 
 	// Card edit modal — clicking a card on the Canvas tab (or a domain/concept
@@ -239,7 +299,7 @@
 	{#if loaded}
 		<div class="flex-1 overflow-hidden flex flex-col">
 			<BemCanvasView
-				{nodes}
+				nodes={graphData.nodes}
 				{links}
 				onSelectNode={handleSelectNode}
 				onAddNode={handleAddNode}
@@ -257,7 +317,7 @@
 {#if editingCardNode}
 	<ConceptCardEditModal
 		node={editingCardNode}
-		allNodes={nodes}
+		allNodes={graphData.nodes}
 		onClose={() => (editingCardId = null)}
 	/>
 {/if}

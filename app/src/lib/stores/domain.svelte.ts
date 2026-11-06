@@ -29,6 +29,9 @@ function lsSaveAll(models: Record<string, DomainModel>): void {
 // of this file means the CP frontend (which transitively pulls type/util
 // imports from here) doesn't need a `$data` alias.
 
+/** The matrix that opens first when none was open before. The SaaS example, the canonical AgileData example. */
+const DEFAULT_MODEL_ID = 'saas-revenue-events-matrix-2';
+
 function stripDateTimeSuffix(name: string): string {
 	return name.replace(/-\d{4}-\d{2}-\d{2}-\d{6}$/, '');
 }
@@ -225,7 +228,7 @@ export function createBemStore(options: BemStoreOptions = {}) {
 			const migrated = models.map(migrateModel);
 			savedList = migrated.map((m) => ({ id: m.id, name: m.name }));
 			const lastId = typeof window !== 'undefined' ? localStorage.getItem('bdm-current-id') : null;
-			const found = migrated.find((m) => m.id === lastId);
+			const found = migrated.find((m) => m.id === lastId) ?? migrated.find((m) => m.id === DEFAULT_MODEL_ID);
 			model = found || migrated[0];
 		}
 		dirty = false;
@@ -240,6 +243,11 @@ export function createBemStore(options: BemStoreOptions = {}) {
 
 	function getSavedList(): { id: string; name: string }[] {
 		return savedList;
+	}
+
+	/** Read one saved matrix without opening it. Goes through the same loader as switchTo, so demo mode and embedded callbacks both work. */
+	async function readSavedModel(id: string): Promise<DomainModel> {
+		return migrateModel(await apiLoadModel(id));
 	}
 
 	function isDirty(): boolean {
@@ -528,6 +536,7 @@ export function createBemStore(options: BemStoreOptions = {}) {
 		initStore,
 		getModel,
 		getSavedList,
+		readSavedModel,
 		isDirty,
 		isLoaded,
 		switchTo,
