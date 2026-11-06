@@ -35,6 +35,7 @@ The app starts at [http://localhost:5121](http://localhost:5121).
 ## Features
 
 - **Matrix grid** — events as rows, concepts as columns, flagged by domain
+- **8 Steps tab** (the first tab) — eight guided steps that build the matrix one question at a time, with Back and Next
 - **Check/star marks** — click cells to mark concept involvement in events
 - **Import JSON** — load a previously exported matrix
 - **Multiple matrix models** — create, switch between, and delete an event matrix

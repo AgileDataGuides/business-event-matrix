@@ -14,7 +14,7 @@
 	const store = createBemStore();
 	setContext('bemStore', store);
 
-	let activeTab = $state<string>('matrix');
+	let activeTab = $state<string>('steps');
 	let loaded = $state(false);
 	let version = $state(0);
 
@@ -217,7 +217,7 @@
 	</div>
 {/if}
 
-{#if activeTab === 'matrix'}
+{#if activeTab === 'matrix' || activeTab === 'steps'}
 	{#if loaded}
 		<div class="flex-1 overflow-hidden flex flex-col">
 			<BusinessEventMatrixLayout
@@ -228,6 +228,8 @@
 				showModelSelector={false}
 				showToolbar={false}
 				showTabs={false}
+				activeBemTab={activeTab === 'steps' ? 'steps' : 'matrix'}
+				onBemTabChange={(tab) => (activeTab = tab)}
 			/>
 		</div>
 	{:else}

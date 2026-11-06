@@ -11,6 +11,9 @@
 	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
 	import { getNodeLabels } from '$lib/cp-shared';
 	import BemCanvasView from './BemCanvasView.svelte';
+	import StepsView from './StepsView.svelte';
+	// Relative, not $lib: the Context Plane imports this component, and $lib there is its own folder
+	import { readMarks, type MatrixActions, type MatrixView } from '../../model/matrix-view';
 
 	// W constants (duplicated from BEM app to avoid cross-app import)
 	type W = 'who' | 'what' | 'when' | 'where' | 'why' | 'how' | 'how many';
@@ -44,12 +47,12 @@
 		onExportCsv,
 		onExportXlsx,
 		// Opt-in: when both `activeBemTab` and `onBemTabChange` are provided,
-		// the internal Tier 3 tab strip renders as `Matrix | Canvas` and the
-		// layout body switches between the matrix grid and BemCanvasView.
-		// Used by the CP frontend to give its embedded BEM canvas the same
-		// Matrix/Canvas split the SA app exposes via its Toolbar tabs.
-		// SA keeps `showTabs={false}` and continues routing through its own
-		// Toolbar — these props are inert there.
+		// the internal Tier 3 tab strip renders as `8 Steps | Matrix | Canvas`
+		// and the layout body switches between the matrix grid, the Steps
+		// view and BemCanvasView. Used by the CP frontend to give its embedded
+		// BEM canvas the same split the SA app exposes via its Toolbar tabs.
+		// The SA app passes them too, for Matrix and Steps, but keeps
+		// `showTabs={false}` and routes through its own Toolbar.
 		activeBemTab,
 		onBemTabChange
 	}: {
@@ -70,8 +73,8 @@
 		onExportPdf?: () => Promise<void>;
 		onExportCsv?: () => void;
 		onExportXlsx?: () => void;
-		activeBemTab?: 'matrix' | 'canvas';
-		onBemTabChange?: (tab: 'matrix' | 'canvas') => void;
+		activeBemTab?: 'matrix' | 'steps' | 'canvas';
+		onBemTabChange?: (tab: 'matrix' | 'steps' | 'canvas') => void;
 	} = $props();
 
 	// True when the caller has opted into the layout-owned Matrix/Canvas tabs.
@@ -421,6 +424,90 @@
 			if (link) await adapter.deleteLink(link.id);
 		}
 	}
+
+	// ── Steps view ──
+	// The selected matrix as the Steps tab reads it: every Domain, Event and
+	// Concept, unfiltered by the matrix's search boxes, in the matrix's order.
+	// Only marks to the Domains and Concepts the matrix shows count, so an Event
+	// shared with another matrix is not counted as marked by that matrix's marks.
+	const stepsMatrix = $derived.by((): MatrixView | null => {
+		if (!selectedModel) return null;
+		const shownDomains = new Set(domainNodes.map((n) => n.id));
+		const shownConcepts = new Set(conceptNodes.map((n) => n.id));
+		return {
+			model: selectedModel,
+			domains: domainNodes,
+			events: eventNodes,
+			concepts: WS.flatMap((wt) => conceptNodes.filter((n) => ((n.properties?.w as string) || 'who') === wt)),
+			domainMarks: readMarks(domainMarkLinks.filter((l) => shownDomains.has(l.destination_id)), ['event_involves_domain']),
+			conceptMarks: readMarks(conceptMarkLinks.filter((l) => shownConcepts.has(l.destination_id)), ['event_involves_concept', 'event_involves_dimension'])
+		};
+	});
+
+	/** Sets one cell's mark, the same link the matrix cell writes. '' takes the mark off. */
+	async function writeMark(label: string, markLinks: ContextLink[], eventId: string, targetId: string, mark: EventConceptMark) {
+		const link = markLinks.find((l) => l.source_id === eventId && l.destination_id === targetId);
+		if (((link?.properties?.mark as EventConceptMark) || '') === mark) return;
+		if (link) await adapter.deleteLink(link.id);
+		if (mark) await adapter.createLink({ source_id: eventId, destination_id: targetId, label, properties: { mark } });
+	}
+
+	// A step adds a new node and links it to the selected matrix, as the + Event,
+	// + Domain and + Concept forms do when nothing is picked from their typeahead.
+	// A name the matrix already shows is not added twice. A step never links a
+	// node from elsewhere: the standalone adapter cannot link another matrix's
+	// node, so a link would add nothing there.
+	function hasName(shown: ContextNode[], name: string): boolean {
+		const key = name.trim().toLowerCase();
+		return shown.some((n) => n.name.trim().toLowerCase() === key);
+	}
+
+	// Adds run one at a time, so a fast second Enter reads the first add's
+	// node: its order follows on, and the same name typed twice is added once.
+	// An add stays with the matrix it was typed in: if the matrix changes
+	// while it waits, it is dropped.
+	let addQueue: Promise<void> = Promise.resolve();
+	function queued(add: (modelId: string) => Promise<void>): Promise<void> {
+		const modelId = selectedModelId;
+		const run = addQueue.then(() => (modelId && modelId === selectedModelId ? add(modelId) : undefined));
+		addQueue = run.catch(() => {});
+		return run;
+	}
+
+	const stepActions: MatrixActions = {
+		async updateModel(updates) {
+			if (selectedModel) await adapter.updateNode(selectedModel.id, updates);
+		},
+		addDomain: (name) =>
+			queued(async (modelId) => {
+				if (hasName(domainNodes, name)) return;
+				const node = await adapter.createNode({ label: 'bem_domain', name, properties: { order: domainNodes.length + 1, aliases: [], owner: '' } });
+				await adapter.createLink({ source_id: modelId, destination_id: node.id, label: 'has_domain' });
+			}),
+		addEvent: (name) =>
+			queued(async (modelId) => {
+				if (hasName(eventNodes, name)) return;
+				const node = await adapter.createNode({ label: 'bem_event', name, properties: { order: eventNodes.length + 1, importance: 0, estimate: 0 } });
+				await adapter.createLink({ source_id: modelId, destination_id: node.id, label: 'has_event' });
+			}),
+		addConcept: (name, w) =>
+			queued(async (modelId) => {
+				if (hasName(conceptNodes, name)) return;
+				const node = await adapter.createNode({ label: conceptEntityLabel, name, properties: { w, order: conceptNodes.length + 1, aliases: [] } });
+				await adapter.createLink({ source_id: modelId, destination_id: node.id, label: 'has_concept' });
+			}),
+		setDomainMark: (eventId, domainId, mark) => writeMark('event_involves_domain', domainMarkLinks, eventId, domainId, mark),
+		setConceptMark: (eventId, conceptId, mark) => writeMark('event_involves_concept', conceptMarkLinks, eventId, conceptId, mark)
+	};
+
+	const showingSteps = $derived(tabsControlled && activeBemTab === 'steps');
+
+	/** The Tier 3 tabs when the host controls them */
+	const BEM_TABS = [
+		{ id: 'steps', label: '8 Steps' },
+		{ id: 'matrix', label: 'Matrix' },
+		{ id: 'canvas', label: 'Canvas' }
+	] as const;
 
 	// ── Add Event inline form state (typeahead over existing + new) ──
 	let showAddEvent = $state(false);
@@ -851,7 +938,8 @@
 
 <svelte:window onclick={handleClickOutsideMatrix} />
 
-<div class="flex-1 overflow-auto p-4">
+<!-- The Steps view fills the height left under the tiers, so its rail and panel scroll on their own -->
+<div class="flex-1 p-4 {showingSteps ? 'min-h-0 flex flex-col overflow-hidden' : 'overflow-auto'}">
 	<!-- Tier 1: Header — Matrix switcher + New + Delete (hidden when CP sidebar takes over) -->
 	{#if effectiveShowSwitcher}
 		<div class="bg-white border border-slate-200 rounded-lg px-4 py-2.5 mb-2">
@@ -993,21 +1081,18 @@
 
 	<!-- Tier 3: Tabs (§ Tier 3 — blue-600 active, slate-400 inactive)
 	     When `activeBemTab` + `onBemTabChange` are both supplied (CP), the
-	     strip becomes a real toggle: Matrix grid vs BemCanvasView. SA app
-	     passes neither and gets the legacy single-tab look. -->
+	     strip becomes a real toggle: Steps view, Matrix grid, BemCanvasView.
+	     A host that passes neither gets the legacy single-tab look. -->
 	{#if selectedModel && showTabs}
-		<div class="flex gap-0 px-4 border-b border-slate-200 mb-3">
+		<div class="flex gap-0 px-4 border-b border-slate-200 mb-3 shrink-0">
 			{#if tabsControlled}
-				<button
-					type="button"
-					class="flex items-center px-3.5 py-2 text-xs font-medium border-b-2 -mb-px transition-colors {activeBemTab === 'matrix' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'}"
-					onclick={() => onBemTabChange?.('matrix')}
-				>Matrix</button>
-				<button
-					type="button"
-					class="flex items-center px-3.5 py-2 text-xs font-medium border-b-2 -mb-px transition-colors {activeBemTab === 'canvas' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'}"
-					onclick={() => onBemTabChange?.('canvas')}
-				>Canvas</button>
+				{#each BEM_TABS as tab (tab.id)}
+					<button
+						type="button"
+						class="flex items-center px-3.5 py-2 text-xs font-medium border-b-2 -mb-px transition-colors {activeBemTab === tab.id ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'}"
+						onclick={() => onBemTabChange?.(tab.id)}
+					>{tab.label}</button>
+				{/each}
 			{:else}
 				<button class="flex items-center px-3.5 py-2 text-xs font-medium border-b-2 -mb-px text-blue-600 border-blue-600">Matrix</button>
 			{/if}
@@ -1028,6 +1113,10 @@
 		<div class="text-center py-12 text-slate-400">
 			<p class="text-lg mb-2">No matrix found</p>
 			<p class="text-sm">Create a new matrix to get started with the Business Event Matrix.</p>
+		</div>
+	{:else if showingSteps && stepsMatrix}
+		<div class="flex-1 min-h-0 rounded-lg border border-slate-200 overflow-hidden">
+			<StepsView matrix={stepsMatrix} actions={stepActions} {onSelectNode} onOpenMatrix={() => onBemTabChange?.('matrix')} />
 		</div>
 	{:else}
 		<!-- Action buttons -->

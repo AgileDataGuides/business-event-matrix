@@ -6,12 +6,13 @@
 	const store = getContext<BemStore>('bemStore');
 
 	let {
-		activeTab = $bindable('matrix'),
+		activeTab = $bindable('steps'),
 	}: {
 		activeTab: string;
 	} = $props();
 
 	const tabs = [
+		{ id: 'steps', label: '8 Steps' },
 		{ id: 'matrix', label: 'Matrix' },
 		{ id: 'canvas', label: 'Canvas' },
 		{ id: 'instructions', label: 'Instructions' }

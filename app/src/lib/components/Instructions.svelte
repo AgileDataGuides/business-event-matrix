@@ -29,6 +29,18 @@
 		</section>
 
 		<section class="option-card">
+			<h3>Build It Step by Step</h3>
+			<p>The <strong>8 Steps</strong> tab, the first tab and the one the app opens on, walks a team through the matrix one question at a time. It writes the same Events, Domains, Concepts and marks as the Matrix tab.</p>
+			<ol>
+				<li>Click <strong>New Matrix</strong>, then open the <strong>8 Steps</strong> tab. Eight steps run down the left, each with a line that shows how far it has got.</li>
+				<li>Read the step's question, type an answer and press Enter. The cursor stays in the field, so you can add the next one straight away.</li>
+				<li>In Steps 4, 6 and 7, click a chip under an Event to mark it. A click on a marked chip takes the mark off. In Step 7, a click turns a ✓ into the driving ✭.</li>
+				<li>Click <strong>Next</strong> at the bottom to move on, or <strong>Back</strong> to go back. Any step on the left is one click away. No step is locked.</li>
+				<li>Step 8 lists the gaps, such as an Event with no driving Concept. Click <strong>Go to</strong> to open the step that fixes it, or <strong>Open the Matrix tab</strong> to see the whole grid.</li>
+			</ol>
+		</section>
+
+		<section class="option-card">
 			<h3>Build Your Own Business Event Matrix</h3>
 			<p>Create a new matrix, add events, domains, and concepts, then use Claude to review and improve it.</p>
 			<ol>
