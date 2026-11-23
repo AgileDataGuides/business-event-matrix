@@ -2,7 +2,7 @@
 	// Step 1: the matrix's name and its scope line, the same two values the
 	// toolbar shows over the Matrix tab. Each saves when the field loses focus,
 	// and Enter in the name saves it too.
-	import type { ContextNode } from '$lib/cp-shared';
+	import type { ContextNode } from '#lib/cp-shared.ts';
 	import type { MatrixActions } from '../../../model/matrix-view';
 	import { INPUT } from '../../../ui/tokens';
 

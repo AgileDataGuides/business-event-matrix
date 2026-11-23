@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { WS, W_LABELS, W_COLORS, W_BG, W_BORDER, DOMAIN_COLOR, DOMAIN_BG, DOMAIN_BORDER } from '$lib/types';
-	import type { W, Concept, Domain } from '$lib/types';
-	import type { BemStore } from '$lib/stores/domain.svelte';
+	import { WS, W_LABELS, W_COLORS, W_BG, W_BORDER, DOMAIN_COLOR, DOMAIN_BG, DOMAIN_BORDER } from '#lib/types.ts';
+	import type { W, Concept, Domain } from '#lib/types.ts';
+	import type { BemStore } from '#lib/stores/domain.svelte.ts';
 
 	const store = getContext<BemStore>('bemStore');
 

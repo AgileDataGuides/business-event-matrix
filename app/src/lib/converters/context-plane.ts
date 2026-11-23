@@ -2,8 +2,8 @@
  * Bidirectional converter between BEM native JSON and Context Plane { nodes, links } format.
  * Marks (check/star) are stored as properties on event_involves_domain/event_involves_concept links.
  */
-import type { ContextNode, ContextLink } from '$lib/cp-shared';
-import type { DomainModel, EventDimensionMark } from '$lib/types';
+import type { ContextNode, ContextLink } from '#lib/cp-shared.ts';
+import type { DomainModel, EventDimensionMark } from '#lib/types.ts';
 
 function createId(prefix: string): string {
 	const rand = typeof crypto !== 'undefined' && crypto.randomUUID

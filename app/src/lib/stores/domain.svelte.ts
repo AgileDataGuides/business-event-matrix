@@ -1,5 +1,5 @@
-import type { DomainModel, BusinessEvent, Concept, Domain, W, EventDimensionMark } from '$lib/types';
-import { bemModelToCsv, bemModelToXlsxBlob, downloadBemBlob, bemExportFilename } from '$lib/export-bem';
+import type { DomainModel, BusinessEvent, Concept, Domain, W, EventDimensionMark } from '#lib/types.ts';
+import { bemModelToCsv, bemModelToXlsxBlob, downloadBemBlob, bemExportFilename } from '#lib/export-bem.ts';
 
 // Demo mode (GitHub Pages static build via VITE_DEMO_MODE=true). All persistence
 // flips to localStorage and the matrix list is seeded with the three example

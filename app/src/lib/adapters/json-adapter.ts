@@ -1,5 +1,5 @@
-import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
-import type { DomainModel, EventDimensionMark } from '$lib/types';
+import type { DataAdapter, ContextNode, ContextLink } from '#lib/cp-shared.ts';
+import type { DomainModel, EventDimensionMark } from '#lib/types.ts';
 
 function createId(): string {
 	const rand = typeof crypto !== 'undefined' && crypto.randomUUID

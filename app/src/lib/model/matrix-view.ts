@@ -2,7 +2,7 @@
 // tab derives from it: each step's status, and the gaps Step 8 lists.
 // Pure functions over { nodes, links }, so nothing about a step is stored.
 
-import type { ContextLink, ContextNode } from '$lib/cp-shared';
+import type { ContextLink, ContextNode } from '#lib/cp-shared.ts';
 import type { StepId } from '../canon/steps';
 import type { W } from '../types';
 

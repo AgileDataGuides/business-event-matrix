@@ -3,8 +3,8 @@
 	// picked after an add, so a run of Who's goes in without a click between
 	// them. The list shows the Concepts under their W, in the matrix's colours,
 	// and a click opens a Concept the same as on the Matrix tab.
-	import CanvasCard from '$lib/components/canvas/CanvasCard.svelte';
-	import type { ContextNode } from '$lib/cp-shared';
+	import CanvasCard from '#lib/components/canvas/CanvasCard.svelte';
+	import type { ContextNode } from '#lib/cp-shared.ts';
 	import { ADD_PLACEHOLDER } from '../../../canon/steps';
 	import { conceptW } from '../../../model/matrix-view';
 	import { WS, W_COLORS, W_LABELS, type W } from '../../../types';

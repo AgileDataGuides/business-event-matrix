@@ -19,7 +19,7 @@
  *
  * Usage:
  *   import { buildXlsxBlob, downloadXlsx, type SheetSpec }
- *     from '$lib/cp-shared-xlsx';
+ *     from '#lib/cp-shared-xlsx/index.ts';
  *
  *   const sheets: SheetSpec[] = [
  *     { title: 'Architecture', rows: [['Layer', 'Pattern'], ['Capture', 'CDC']] }

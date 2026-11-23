@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { onMount, setContext, untrack } from 'svelte';
-	import { createBemStore } from '$lib/stores/domain.svelte';
-	import { applyBemDemoSeeds } from '$lib/stores/demo-seed';
-	import { createStandaloneAdapter } from '$lib/adapters/standalone-adapter';
-	import { bemToContextPlane, contextPlaneToBem } from '$lib/converters/context-plane';
-	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
-	import { nodeHasLabel } from '$lib/cp-shared';
-	import Toolbar from '$lib/components/Toolbar.svelte';
-	import Instructions from '$lib/components/Instructions.svelte';
-	import BusinessEventMatrixLayout from '$lib/components/canvas/BusinessEventMatrixLayout.svelte';
-	import BemCanvasView from '$lib/components/canvas/BemCanvasView.svelte';
-	import ConceptCardEditModal from '$lib/components/canvas/ConceptCardEditModal.svelte';
+	import { createBemStore } from '#lib/stores/domain.svelte.ts';
+	import { applyBemDemoSeeds } from '#lib/stores/demo-seed.ts';
+	import { createStandaloneAdapter } from '#lib/adapters/standalone-adapter.ts';
+	import { bemToContextPlane, contextPlaneToBem } from '#lib/converters/context-plane.ts';
+	import type { DataAdapter, ContextNode, ContextLink } from '#lib/cp-shared.ts';
+	import { nodeHasLabel } from '#lib/cp-shared.ts';
+	import Toolbar from '#lib/components/Toolbar.svelte';
+	import Instructions from '#lib/components/Instructions.svelte';
+	import BusinessEventMatrixLayout from '#lib/components/canvas/BusinessEventMatrixLayout.svelte';
+	import BemCanvasView from '#lib/components/canvas/BemCanvasView.svelte';
+	import ConceptCardEditModal from '#lib/components/canvas/ConceptCardEditModal.svelte';
 
 	const store = createBemStore();
 	setContext('bemStore', store);

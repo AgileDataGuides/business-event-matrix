@@ -3,8 +3,8 @@
 	// Capture happens live on a shared screen, so the add field is the full
 	// form input, and Enter adds and keeps the cursor in the field. The cards
 	// are the Canvas tab's cards: a click on a card opens the edit popup.
-	import CanvasCard from '$lib/components/canvas/CanvasCard.svelte';
-	import type { ContextNode } from '$lib/cp-shared';
+	import CanvasCard from '#lib/components/canvas/CanvasCard.svelte';
+	import type { ContextNode } from '#lib/cp-shared.ts';
 	import { ADD_PLACEHOLDER } from '../../../canon/steps';
 	import { DOMAIN_COLOR } from '../../../types';
 	import { BUTTON, INPUT, TEXT } from '../../../ui/tokens';

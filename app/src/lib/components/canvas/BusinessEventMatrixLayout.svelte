@@ -8,8 +8,8 @@
 	 * event_involves_concept links, following the mark-as-link-properties pattern.
 	 */
 	import { getContext } from 'svelte';
-	import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
-	import { getNodeLabels } from '$lib/cp-shared';
+	import type { DataAdapter, ContextNode, ContextLink } from '#lib/cp-shared.ts';
+	import { getNodeLabels } from '#lib/cp-shared.ts';
 	import BemCanvasView from './BemCanvasView.svelte';
 	import StepsView from './StepsView.svelte';
 	// Relative, not $lib: the Context Plane imports this component, and $lib there is its own folder

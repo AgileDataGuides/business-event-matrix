@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { BemStore } from '$lib/stores/domain.svelte';
-	import { exportDomainModelToPdf } from '$lib/export-pdf';
+	import type { BemStore } from '#lib/stores/domain.svelte.ts';
+	import { exportDomainModelToPdf } from '#lib/export-pdf.ts';
 
 	const store = getContext<BemStore>('bemStore');
 

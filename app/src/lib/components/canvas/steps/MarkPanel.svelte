@@ -8,7 +8,7 @@
 	//               the ✭ that marks the driving Concept, and back.
 	// A Domain or Concept that already holds a ✭ shows it, so no mark is hidden.
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { ContextNode } from '$lib/cp-shared';
+	import type { ContextNode } from '#lib/cp-shared.ts';
 	import { NEEDS_EARLIER_STEP } from '../../../canon/steps';
 	import { conceptW, count, markOf, type Mark, type MatrixActions, type MatrixView } from '../../../model/matrix-view';
 	import { WS, W_COLORS, W_LABELS } from '../../../types';

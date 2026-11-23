@@ -30,7 +30,7 @@ Run `./start-BEM.sh` from the terminal.
 
 The app starts at [http://localhost:5121](http://localhost:5121).
 
-**Requires**: [Node.js](https://nodejs.org/) (v18+) and [pnpm](https://pnpm.io/) (`npm install -g pnpm`).
+**Requires**: [Node.js](https://nodejs.org/) 22.17+ or 24+ (not 23) and [pnpm](https://pnpm.io/) (`npm install -g pnpm`).
 
 ## Features
 

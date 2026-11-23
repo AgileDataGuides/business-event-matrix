@@ -9,9 +9,9 @@
  * On every mutation the adapter also calls store.saveModel() so changes persist.
  */
 
-import type { DataAdapter, ContextNode, ContextLink } from '$lib/cp-shared';
-import type { BemStore } from '$lib/stores/domain.svelte';
-import { bemToContextPlane, contextPlaneToBem } from '$lib/converters/context-plane';
+import type { DataAdapter, ContextNode, ContextLink } from '#lib/cp-shared.ts';
+import type { BemStore } from '#lib/stores/domain.svelte.ts';
+import { bemToContextPlane, contextPlaneToBem } from '#lib/converters/context-plane.ts';
 
 function createId(prefix: string): string {
 	const rand = typeof crypto !== 'undefined' && crypto.randomUUID

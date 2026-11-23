@@ -24,9 +24,9 @@
 	 * fallback). We accept both so concepts created via the Matrix tab show up
 	 * here too.
 	 */
-	import CanvasSection from '$lib/components/canvas/CanvasSection.svelte';
-	import { getNodeLabels } from '$lib/cp-shared';
-	import type { ContextNode, ContextLink } from '$lib/cp-shared';
+	import CanvasSection from '#lib/components/canvas/CanvasSection.svelte';
+	import { getNodeLabels } from '#lib/cp-shared.ts';
+	import type { ContextNode, ContextLink } from '#lib/cp-shared.ts';
 
 	let {
 		nodes,
